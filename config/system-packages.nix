@@ -15,6 +15,8 @@
       nixfmt
       os-prober
       efibootmgr
+      obsidian
+      tldr
     ];
     variables.EDITOR = "micro";
   };

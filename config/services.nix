@@ -1,6 +1,7 @@
 { ... }:
 {
   services = {
+    fwupd.enable = true; # Enable firmware updates.
     xserver = {
       enable = true; # Enable the X11 windowing system.
       xkb = {

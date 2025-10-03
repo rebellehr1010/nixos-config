@@ -64,7 +64,7 @@
     whatsapp-electron
     zsh
     zoxide
-
+    oh-my-zsh
   ];
 
   # basic configuration of git, please change to your own
@@ -73,28 +73,23 @@
       enable = true;
       userName = "rebellehr1010";
       userEmail = "riley.lehr@connectsource.com.au";
-      config = {
-        init = {
-          defaultBranch = "main";
-        };
-        user.name = "rebellehr1010";
-        user.email = "riley.lehr@connectsource.com.au";
+      extraConfig = {
+        init.defaultBranch = "main";
       };
-    };
-    steam = {
-      enable = true;
-      remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
-      dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
-      localNetworkGameTransfers.openFirewall = true; # Open ports in the firewall for Steam Local Network Game Transfers
     };
     zoxide = {
       enable = true;
       enableZshIntegration = true;
-      flags = [ "--cmd cd" ];
+      options = [ "--cmd cd" ];
     };
     zsh = {
       enable = true;
-      ohMyZsh = {
+      syntaxHighlighting = {
+        enable = true;
+      };
+      enableCompletion = true;
+      autosuggestion.enable = true;
+      oh-my-zsh = {
         enable = true;
         theme = "frisk";
         plugins = [
@@ -113,12 +108,8 @@
           "zsh-syntax-highlighting"
         ];
       };
-      syntaxHighlighting = {
-        enable = true;
-      };
-      enableCompletion = true;
-      autosuggestions.enable = true;
     };
+
   };
 
   # This value determines the home Manager release that your

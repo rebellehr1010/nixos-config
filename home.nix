@@ -87,6 +87,7 @@
       syntaxHighlighting = {
         enable = true;
       };
+      plugins = with zsh_plugins; trace "++zsh plugin list: ${lib.concatMapStringsSep "," (x: x.name) plugin_list}" plugin_list;
       enableCompletion = true;
       autosuggestion.enable = true;
       oh-my-zsh = {

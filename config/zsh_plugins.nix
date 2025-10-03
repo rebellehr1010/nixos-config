@@ -1,43 +1,70 @@
-{ pkgs, ... }:
-with builtins;
+{ pkgs, lib, ... }:
 let
-  _zplug = (
-    _group: _name: {
-      name = "${_name}";
-      src = builtins.fetchTarball "https://github.com/${_group}/${_name}/archive/master.tar.gz";
-    }
-  );
-  make_plugin =
+  # Helper to define a plugin. Use lib.fakeSha256 first; build will print the real hash.
+  gh =
     {
-      group,
-      name,
-      file,
-      ...
+      owner,
+      repo,
+      rev ? "master",
+      file ? null,
     }:
     {
-      name = "${name}";
-      src = builtins.fetchTarball "https://github.com/${group}/${name}/archive/master.tar.gz";
-      file = file;
-    };
+      name = repo;
+      src = pkgs.fetchFromGitHub {
+        inherit owner repo rev;
+        sha256 = lib.fakeSha256; # replace with real hash after first build failure
+      };
+      inherit file;
+    }
+    // (if file == null then { } else { inherit file; });
 in
-rec {
-
-  zsh_plugins = {
-    zsh-autosuggestions = _zplug "zsh-users" "zsh-autosuggestions";
-    zsh-completions = _zplug "zsh-users" "zsh-completions";
-    zsh-syntax-highlighting = _zplug "zsh-users" "zsh-syntax-highlighting";
-    zsh-history-substring-search = _zplug "zsh-users" "zsh-history-substring-search";
-    powerlevel10k = make_plugin {
-      group = "romkatv";
-      name = "powerlevel10k";
+{
+  # List consumed directly by programs.zsh.plugins
+  plugin_list = [
+    (gh {
+      owner = "zsh-users";
+      repo = "zsh-autosuggestions";
+    })
+    (gh {
+      owner = "zsh-users";
+      repo = "zsh-completions";
+    })
+    (gh {
+      owner = "zsh-users";
+      repo = "zsh-syntax-highlighting";
+    })
+    (gh {
+      owner = "zsh-users";
+      repo = "zsh-history-substring-search";
+    })
+    (gh {
+      owner = "romkatv";
+      repo = "powerlevel10k";
       file = "powerlevel10k.zsh-theme";
-    };
-    nix-zsh-completions = _zplug "spwhitt" "nix-zsh-completions";
-    zsh-command-time = _zplug "popstas" "zsh-command-time";
-    fzf-tab = _zplug "Aloxaf" "fzf-tab";
-    fzf-zsh-plugin = _zplug "unixorn" "fzf-zsh-plugin";
-    you-should-use = _zplug "MichaelAquilina" "zsh-you-should-use";
-    zsh-bat = _zplug "MrXcitemnt" "zsh-bat";
-  };
-  plugin_list = builtins.attrValues zsh_plugins;
+    })
+    (gh {
+      owner = "spwhitt";
+      repo = "nix-zsh-completions";
+    })
+    (gh {
+      owner = "popstas";
+      repo = "zsh-command-time";
+    })
+    (gh {
+      owner = "Aloxaf";
+      repo = "fzf-tab";
+    })
+    (gh {
+      owner = "unixorn";
+      repo = "fzf-zsh-plugin";
+    })
+    (gh {
+      owner = "MichaelAquilina";
+      repo = "zsh-you-should-use";
+    })
+    (gh {
+      owner = "fdellwing";
+      repo = "zsh-bat";
+    })
+  ];
 }

@@ -1,53 +1,28 @@
-{ config, pkgs, ... }:
-
 {
-  # TODO please change the username & home directory to your own
+  config,
+  pkgs,
+  lib,
+  ...
+}:
+let
+  zshPlugins = import ./config/zsh_plugins.nix { inherit pkgs lib; };
+in
+{
   home.username = "riley";
   home.homeDirectory = "/home/riley";
 
-  # link the configuration file in current directory to the specified location in home directory
-  # home.file.".config/i3/wallpaper.jpg".source = ./wallpaper.jpg;
-
-  # link all files in `./scripts` to `~/.config/i3/scripts`
-  # home.file.".config/i3/scripts" = {
-  #   source = ./scripts;
-  #   recursive = true;   # link recursively
-  #   executable = true;  # make all files executable
-  # };
-
-  # encode the file content in nix configuration file directly
-  # home.file.".xxx".text = ''
-  #     xxx
-  # '';
-
-  # set cursor size and dpi for 4k monitor
-  # xresources.properties = {
-  #   "Xcursor.size" = 16;
-  #   "Xft.dpi" = 172;
-  # };
-
-  # Packages that should be installed to the user profile.
   home.packages = with pkgs; [
-    # here is some command line tools I use frequently
-    # feel free to add your own or remove some of them
-
-    # archives
     zip
     unzip
-
-    # utils
-    ripgrep # recursively searches directories for a regex pattern
-    jq # A lightweight and flexible command-line JSON processor
-    yq-go # yaml processor https://github.com/mikefarah/yq
-    eza # A modern replacement for ‘ls’
-    fzf # A command-line fuzzy finder
-
-    # misc
+    ripgrep
+    jq
+    yq-go
+    eza
+    fzf
     file
     which
-
-    pciutils # lspci
-    usbutils # lsusb
+    pciutils
+    usbutils
     git
     wget
     gedit
@@ -64,18 +39,15 @@
     whatsapp-electron
     zsh
     zoxide
-    oh-my-zsh
+    zplug
   ];
 
-  # basic configuration of git, please change to your own
   programs = {
     git = {
       enable = true;
       userName = "rebellehr1010";
       userEmail = "riley.lehr@connectsource.com.au";
-      extraConfig = {
-        init.defaultBranch = "main";
-      };
+      extraConfig.init.defaultBranch = "main";
     };
     zoxide = {
       enable = true;
@@ -84,42 +56,44 @@
     };
     zsh = {
       enable = true;
-      syntaxHighlighting = {
-        enable = true;
-      };
-      plugins = with zsh_plugins; trace "++zsh plugin list: ${lib.concatMapStringsSep "," (x: x.name) plugin_list}" plugin_list;
       enableCompletion = true;
-      autosuggestion.enable = true;
-      oh-my-zsh = {
-        enable = true;
-        theme = "frisk";
-        plugins = [
-          "copybuffer"
-          "copyfile"
-          "command-time"
-          "dirhistory"
-          "fzf-tab"
-          "fzf-zsh-plugin"
-          "git"
-          "history"
-          "sudo"
-          "you-should-use"
-          "zsh-autosuggestions"
-          "zsh-bat"
-          "zsh-syntax-highlighting"
-        ];
-      };
-    };
+      autosuggestion.enable = true; # Still provide autosuggestion via HM; zplug will also fetch its version.
 
+      # We'll rely on zplug for syntax highlighting, so disable HM's built-in to avoid duplication.
+      syntaxHighlighting.enable = false;
+      # Using initContent (initExtra deprecated) with zplug-managed plugins.
+      initContent = ''
+        export ZPLUG_HOME="$HOME/.zplug"
+        source ${pkgs.zplug}/share/zplug/init.zsh
+
+        # Plugins (themes/plugins) managed by zplug
+        zplug "zsh-users/zsh-autosuggestions"
+        zplug "zsh-users/zsh-completions"
+        zplug "zsh-users/zsh-syntax-highlighting"
+        zplug "zsh-users/zsh-history-substring-search"
+        zplug "romkatv/powerlevel10k", as:theme, depth:1
+        zplug "spwhitt/nix-zsh-completions"
+        zplug "popstas/zsh-command-time"
+        zplug "Aloxaf/fzf-tab"
+        zplug "unixorn/fzf-zsh-plugin"
+        zplug "MichaelAquilina/zsh-you-should-use"
+        zplug "fdellwing/zsh-bat"
+
+        # Install any missing plugins quietly on first run
+        if ! zplug check --verbose; then
+          printf '\n[zplug] Installing missing plugins...\n' >&2
+          zplug install
+        fi
+
+        zplug load
+
+        # Powerlevel10k instant prompt (optional, improves startup)
+        if [[ -r "$HOME/.p10k.zsh" ]]; then
+          source "$HOME/.p10k.zsh"
+        fi
+      '';
+    };
   };
 
-  # This value determines the home Manager release that your
-  # configuration is compatible with. This helps avoid breakage
-  # when a new home Manager release introduces backwards
-  # incompatible changes.
-  #
-  # You can update home Manager without changing this value. See
-  # the home Manager release notes for a list of state version
-  # changes in each release.
   home.stateVersion = "25.05";
 }

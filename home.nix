@@ -5,39 +5,71 @@
   ...
 }:
 {
-  home.username = "riley";
-  home.homeDirectory = "/home/riley";
-
-  home.packages = with pkgs; [
-    zip
-    unzip
-    ripgrep
-    jq
-    yq-go
-    eza
-    fzf
-    file
-    which
-    pciutils
-    usbutils
-    git
-    wget
-    gedit
-    micro
-    brave
-    vscode
-    htop
-    nixfmt
-    os-prober
-    efibootmgr
-    obsidian
-    tldr
-    caprine
-    whatsapp-electron
-    zsh
-    zoxide
-    zplug
-  ];
+  home = {
+    username = "riley";
+    homeDirectory = "/home/riley";
+    shellAliases = {
+      clear-ob = "clear_ob.sh";
+      commands = "commands.sh";
+      config-gcc = "config_gcc.sh";
+      dff = "dart format . && dart fix --apply && dart format .";
+      fcg = "flutter clean && flutter pub get";
+      files = "files.sh";
+      fix-includes = "fix_includes.sh";
+      fpg = "flutter pub get";
+      ft = "flutter test";
+      ftff = "flutter test --fail-fast";
+      g = "git";
+      git-whitespace-fix = "git_whitespace_fix.sh";
+      gsuir = "git submodule update --init --recursive";
+      header-include-fix = "header_include_fix.sh";
+      ls = "eza";
+      lsta = "start_logging.sh";
+      lsto = "tmux kill-session -t logging";
+      prettier = "prettier.sh";
+      remove-gcc = "remove_gcc.sh";
+      start-logging = "start_logging.sh";
+      ta = "tmux a -t";
+      tk = "tmux kill-session -t";
+      tl = "tmux ls";
+      tmux = "tmux -2";
+      tn = "tmux new -A -s";
+      update = "update.sh";
+    };
+    packages = with pkgs; [
+      bat
+      brave
+      caprine
+      dconf-editor
+      efibootmgr
+      eza
+      file
+      fzf
+      gedit
+      git
+      htop
+      jq
+      micro
+      nixfmt
+      obsidian
+      os-prober
+      pciutils
+      ripgrep
+      tldr
+      tmux
+      unzip
+      usbutils
+      vscode
+      wget
+      whatsapp-electron
+      which
+      yq-go
+      zip
+      zoxide
+      zplug
+      zsh
+    ];
+  };
 
   dconf = {
     enable = true;
@@ -69,6 +101,12 @@
         apply-custom-theme = true;
       };
       "org/gnome/desktop/wm/preferences".button-layout = ":minimize,maximize,close";
+      "org/gnome/desktop/wm/keybindings" = {
+        switch-to-workspace-up = [ ];
+        switch-to-workspace-down = [ ];
+        switch-to-workspace-left = [ ];
+        switch-to-workspace-right = [ ];
+      };
     };
   };
 

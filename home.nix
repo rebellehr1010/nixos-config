@@ -40,9 +40,11 @@
       update = "update.sh";
     };
     packages = with pkgs; [
+      android-studio
       bat
       brave
       caprine
+      cmake
       dconf-editor
       efibootmgr
       eza
@@ -54,12 +56,15 @@
       htop
       jq
       micro
+      ncdu
+      ninja
       nixfmt
       obsidian
       os-prober
       pciutils
       ripgrep
       ruff
+      stm32cubemx
       tldr
       tmux
       ty

@@ -28,6 +28,7 @@
       lsto = "tmux kill-session -t logging";
       prettier = "prettier.sh";
       remove-gcc = "remove_gcc.sh";
+      rs = "source ~/.zshrc";
       start-logging = "start_logging.sh";
       ta = "tmux a -t";
       tk = "tmux kill-session -t";

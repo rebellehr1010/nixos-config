@@ -4,9 +4,6 @@
   lib,
   ...
 }:
-let
-  zshPlugins = import ./config/zsh_plugins.nix { inherit pkgs lib; };
-in
 {
   home.username = "riley";
   home.homeDirectory = "/home/riley";
@@ -64,23 +61,32 @@ in
       # We'll rely on zplug for syntax highlighting, so disable HM's built-in to avoid duplication.
       syntaxHighlighting.enable = false;
       # Using initContent (initExtra deprecated) with zplug-managed plugins.
+      zplug = {
+        enable = true;
+        plugins = [
+          { name = "zsh-users/zsh-autosuggestions"; }
+          { name = "zsh-users/zsh-completions"; }
+          { name = "zsh-users/zsh-syntax-highlighting"; }
+          { name = "zsh-users/zsh-history-substring-search"; }
+          {
+            name = "romkatv/powerlevel10k";
+            tags = [
+              "as:theme"
+              "depth:1"
+            ];
+          }
+          { name = "spwhitt/nix-zsh-completions"; }
+          { name = "popstas/zsh-command-time"; }
+          { name = "Aloxaf/fzf-tab"; }
+          { name = "unixorn/fzf-zsh-plugin"; }
+          { name = "MichaelAquilina/zsh-you-should-use"; }
+          { name = "fdellwing/zsh-bat"; }
+          { name = "joshskidmore/zsh-fzf-history-search"; }
+        ];
+        zplugHome = "/home/riley/.zplug";
+      };
       initContent = ''
-        export ZPLUG_HOME="$HOME/.zplug"
         source ${pkgs.zplug}/share/zplug/init.zsh
-
-        # Plugins (themes/plugins) managed by zplug
-        zplug "zsh-users/zsh-autosuggestions"
-        zplug "zsh-users/zsh-completions"
-        zplug "zsh-users/zsh-syntax-highlighting"
-        zplug "zsh-users/zsh-history-substring-search"
-        zplug "romkatv/powerlevel10k", as:theme, depth:1
-        zplug "spwhitt/nix-zsh-completions"
-        zplug "popstas/zsh-command-time"
-        zplug "Aloxaf/fzf-tab"
-        zplug "unixorn/fzf-zsh-plugin"
-        zplug "MichaelAquilina/zsh-you-should-use"
-        zplug "fdellwing/zsh-bat"
-        zplug "joshskidmore/zsh-fzf-history-search"
 
         # Install any missing plugins quietly on first run
         if ! zplug check --verbose; then

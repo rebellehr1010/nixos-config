@@ -8,6 +8,7 @@
   home = {
     username = "riley";
     homeDirectory = "/home/riley";
+    sessionPath = [ "/etc/nixos/shell" ];
     shellAliases = {
       clear-ob = "clear_ob.sh";
       commands = "commands.sh";
@@ -26,6 +27,7 @@
       ls = "eza";
       lsta = "start_logging.sh";
       lsto = "tmux kill-session -t logging";
+      nrs = "sudo nixos-rebuild switch";
       prettier = "prettier.sh";
       remove-gcc = "remove_gcc.sh";
       rs = "source ~/.zshrc";

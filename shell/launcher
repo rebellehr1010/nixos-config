@@ -1,0 +1,133 @@
+#!/usr/bin/env bash
+#
+# gui-launcher.sh
+#
+# A CLI-only launcher that:
+# - Lists all installed GUI apps (by their "Name=" in the .desktop files)
+# - Lets you pick one from a fuzzy-searchable list
+# - Asks whether to run as normal user or with sudo
+#
+# Dependencies: fzf, gtk-launch
+
+# Function to extract a key from a .desktop file
+get_desktop_key() {
+    local file_path="$1"
+    local key="$2"
+    # Grep for the key, take the first match, cut from the first '=', trim whitespace, and remove control characters
+    grep -m1 -E "^${key}=" "$file_path" | cut -d'=' -f2- | sed 's/^ *//;s/ *$//' | tr -d '[:cntrl:]'
+}
+
+# 1. Gather all .desktop files from standard locations
+mapfile -t desktop_files < <(
+    find /usr/share/applications \
+        /usr/local/share/applications \
+        "$HOME/.local/share/applications" \
+        -maxdepth 1 -type f -name "*.desktop" 2>/dev/null
+)
+
+if [ "${#desktop_files[@]}" -eq 0 ]; then
+    echo "No .desktop files found in /usr/share/applications, /usr/local/share/applications, or ~/.local/share/applications."
+    exit 1
+fi
+
+# 2. Build a list of lines: "Name|desktop_id|escaped_info"
+declare -a fzf_items
+
+for file_path in "${desktop_files[@]}"; do
+    desktop_id=$(basename "$file_path" .desktop)
+
+    name_line=$(get_desktop_key "$file_path" "Name")
+    # Use desktop_id as name if Name field is missing or empty
+    [ -z "$name_line" ] && name_line="$desktop_id"
+
+    comment=$(get_desktop_key "$file_path" "Comment")
+    generic_name=$(get_desktop_key "$file_path" "GenericName")
+    exec_command=$(get_desktop_key "$file_path" "Exec")
+    icon=$(get_desktop_key "$file_path" "Icon")
+
+    info_string=""
+    [ -n "$generic_name" ] && info_string+="Generic Name: $generic_name"$'\n'
+    [ -n "$comment" ] && info_string+="Comment: $comment"$'\n'
+    [ -n "$icon" ] && info_string+="Icon: $icon"$'\n'
+    [ -n "$exec_command" ] && info_string+="Exec: $exec_command"$'\n'
+
+    # Escape literal newlines in info_string so each array entry stays on one line for fzf processing
+    # and preview can correctly interpret them using printf "%b"
+    info_escaped=$(printf '%s' "$info_string" | sed ':a;N;s/\n/\\n/g;ba')
+
+    # Join fields with a delimiter (here: |)
+    fzf_items+=("${name_line}|${desktop_id}|${info_escaped}")
+done
+
+# 3. If no entries at all, bail out
+if [ "${#fzf_items[@]}" -eq 0 ]; then
+    echo "No valid .desktop entries found."
+    exit 1
+fi
+
+# 4. Use fzf to let the user pick a Name
+# --nth=1: Search based on the first field (Name)
+# --with-nth=1: Display only the first field (Name) in the list
+# --delimiter='|': Use pipe as the field separator
+# --preview: Show detailed info for the highlighted entry.
+#   '{}' in preview refers to the original full line (Name|desktop_id|info_escaped)
+# The output of fzf (with --with-nth=1) will be just the Name.
+selection=$(
+    printf '%s\n' "${fzf_items[@]}" |
+        sort | # Sort the items alphabetically by Name
+        # Clear any global defaults for this fzf call only
+        env FZF_DEFAULT_OPTS= \
+            fzf --height 40% \
+            --layout=reverse \
+            --border \
+            --prompt="Launch app: " \
+            --ansi \
+            --delimiter="\|" \
+            --with-nth=1 \
+            --preview=$'IFS="|" read -r name desktop_id info_escaped <<< "{}"\n\
+printf "Desktop ID: %s\\n" "$desktop_id"\n\
+printf "Name: %s\\n" "$name"\n\
+printf -- "-------------------\\n%b" "${info_escaped}"' |
+        # After picking, ensure we only have the Name (field 1)
+        # If fzf with --with-nth=1 already outputs only field 1, this cut is benign.
+        cut -d"|" -f1
+)
+
+# If the user hit ESC or didn’t pick anything, exit cleanly
+if [ -z "$selection" ]; then
+    exit 0
+fi
+
+# 5. Look up the corresponding desktop ID by re-grepping our array using the selected Name
+# $selection should be just the Name field.
+desktop_id=$(
+    printf '%s\n' "${fzf_items[@]}" |
+        grep -F "^${selection}|" | # Match the start of the line with "Name|"
+        head -n 1 |                # Ensure only one match is processed if names are duplicated
+        cut -d"|" -f2
+)
+
+# If desktop_id is somehow empty (e.g., selection contained special characters for grep)
+if [ -z "$desktop_id" ]; then
+    echo "Error: Could not find desktop ID for '$selection'."
+    exit 1
+fi
+
+# 6. Ask whether to run normally or with sudo
+echo
+echo "You selected: $selection (ID: $desktop_id)"
+echo "  [n] Normal user"
+echo "  [s] sudo (root)"
+read -r -n1 -p "Run as (n/s)? " mode
+echo
+
+# 7. Launch via gtk-launch
+if [[ "$mode" =~ ^[sS]$ ]]; then
+    echo "Launching '$selection' with sudo..."
+    sudo gtk-launch "$desktop_id"
+else
+    echo "Launching '$selection' as normal user..."
+    gtk-launch "$desktop_id"
+fi
+
+exit 0

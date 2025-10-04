@@ -21,9 +21,8 @@
     desktopManager.gnome.enable = true; # Enable the GNOME Desktop Environment.
     displayManager = {
       gdm.enable = true;
-      # Enable automatic login for the user.
-      autoLogin.enable = true;
-      autoLogin.user = "riley";
+      autoLogin.enable = false;
+      # autoLogin.user = "riley";
     };
   };
 }

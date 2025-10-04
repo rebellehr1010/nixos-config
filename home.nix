@@ -50,6 +50,7 @@
       fzf
       gedit
       git
+      gnome-tweaks
       htop
       jq
       micro
@@ -58,10 +59,13 @@
       os-prober
       pciutils
       ripgrep
+      ruff
       tldr
       tmux
+      ty
       unzip
       usbutils
+      uv
       vscode
       wget
       whatsapp-electron
@@ -120,6 +124,7 @@
       userEmail = "riley.lehr@connectsource.com.au";
       extraConfig.init.defaultBranch = "main";
     };
+    home-manager.enable = true;
     zoxide = {
       enable = true;
       enableZshIntegration = true;

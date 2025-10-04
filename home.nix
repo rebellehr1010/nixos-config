@@ -42,6 +42,8 @@ in
     zplug
   ];
 
+  dconf.settings."org/gnome/desktop/wm/preferences".button-layout = ":minimize,maximize,close";
+
   programs = {
     git = {
       enable = true;
@@ -78,6 +80,7 @@ in
         zplug "unixorn/fzf-zsh-plugin"
         zplug "MichaelAquilina/zsh-you-should-use"
         zplug "fdellwing/zsh-bat"
+        zplug "joshskidmore/zsh-fzf-history-search"
 
         # Install any missing plugins quietly on first run
         if ! zplug check --verbose; then

@@ -1,7 +1,7 @@
 { ... }:
 {
   networking = {
-    hostName = "nixos-framework"; # Define your hostname.
+    # Hostname is now set in per-host modules under config/hosts/*/host.nix
     networkmanager.enable = true;
   };
 }

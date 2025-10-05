@@ -43,29 +43,57 @@
       ...
     }:
     {
-      nixosConfigurations.nixos-framework = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        specialArgs = { inherit inputs; };
-        modules = [
-          ./config/boot.nix
-          ./config/configuration.nix
-          ./config/hosts/nixos-framework/hardware-configuration.nix
-          ./config/hardware.nix
-          ./config/internationalisation.nix
-          ./config/networking.nix
-          ./config/security.nix
-          ./config/services.nix
-          ./config/system-packages.nix
-          ./config/systemd.nix
-          ./config/time.nix
-          ./config/users.nix
-          home-manager.nixosModules.home-manager
-          {
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-            home-manager.users.riley = import ./home.nix;
-          }
-        ];
+      nixosConfigurations = {
+        nixos-framework = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          specialArgs = { inherit inputs; };
+          modules = [
+            ./config/boot.nix
+            ./config/configuration.nix
+            ./config/hosts/nixos-framework/hardware-configuration.nix
+            ./config/hosts/nixos-framework/host.nix
+            ./config/hardware.nix
+            ./config/internationalisation.nix
+            ./config/networking.nix
+            ./config/security.nix
+            ./config/services.nix
+            ./config/system-packages.nix
+            ./config/systemd.nix
+            ./config/time.nix
+            ./config/users.nix
+            home-manager.nixosModules.home-manager
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.users.riley = import ./home.nix;
+            }
+          ];
+        };
+        nixos-desktop = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          specialArgs = { inherit inputs; };
+          modules = [
+            ./config/boot.nix
+            ./config/configuration.nix
+            ./config/hosts/nixos-desktop/hardware-configuration.nix
+            ./config/hosts/nixos-desktop/host.nix
+            ./config/hardware.nix
+            ./config/internationalisation.nix
+            ./config/networking.nix
+            ./config/security.nix
+            ./config/services.nix
+            ./config/system-packages.nix
+            ./config/systemd.nix
+            ./config/time.nix
+            ./config/users.nix
+            home-manager.nixosModules.home-manager
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.users.riley = import ./home.nix;
+            }
+          ];
+        };
       };
     };
 }

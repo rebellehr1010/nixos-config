@@ -27,7 +27,7 @@
       ls = "eza";
       lsta = "start_logging.sh";
       lsto = "tmux kill-session -t logging";
-      nrs = "sudo nixos-rebuild switch";
+      nrs = "sudo nixos-rebuild switch --flake /etc/nixos"; # Use flake with auto host selection
       prettier = "prettier.sh";
       remove-gcc = "remove_gcc.sh";
       rs = "source ~/.zshrc";
@@ -59,12 +59,15 @@
       ncdu
       ninja
       nixfmt
+      npx
       obsidian
       os-prober
       pciutils
+      qbittorrent
       ripgrep
       ruff
       stm32cubemx
+      tailscale
       tldr
       tmux
       ty

@@ -53,6 +53,7 @@
       gedit
       git
       gnome-tweaks
+      gprename
       htop
       jq
       micro

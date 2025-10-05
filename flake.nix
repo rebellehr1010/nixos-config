@@ -49,20 +49,23 @@
               home-manager.users.riley = import ./home.nix;
             }
           ];
+          # Attrset of hosts -> directory (each directory contains hardware-configuration.nix & host.nix)
+          hostDirs = {
+            nixos-framework = ./config/hosts/nixos-framework;
+            nixos-desktop = ./config/hosts/nixos-desktop;
+          };
+          # Build a NixOS system for each host, avoiding fragile path concatenation.
           mkHost =
-            host: hardwarePath:
+            host: dir:
             nixpkgs.lib.nixosSystem {
               inherit system;
               specialArgs = { inherit inputs; };
               modules = baseModules ++ [
-                hardwarePath
-                (./config/hosts + "/" + host + "/host.nix")
+                (builtins.toPath "${dir}/hardware-configuration.nix")
+                (builtins.toPath "${dir}/host.nix")
               ];
             };
         in
-        {
-          nixos-framework = mkHost "nixos-framework" ./config/hosts/nixos-framework/hardware-configuration.nix;
-          nixos-desktop = mkHost "nixos-desktop" ./config/hosts/nixos-desktop/hardware-configuration.nix;
-        };
+        nixpkgs.lib.mapAttrs mkHost hostDirs;
     };
 }

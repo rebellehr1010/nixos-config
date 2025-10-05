@@ -59,7 +59,7 @@
       ncdu
       ninja
       nixfmt
-      npx
+      nodejs
       obsidian
       os-prober
       pciutils

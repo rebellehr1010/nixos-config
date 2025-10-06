@@ -56,6 +56,7 @@
       gprename
       htop
       jq
+      libreoffice
       micro
       ncdu
       ninja

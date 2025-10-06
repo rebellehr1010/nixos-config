@@ -57,6 +57,7 @@
       htop
       jq
       libreoffice
+      localsend
       micro
       ncdu
       ninja

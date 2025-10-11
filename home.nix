@@ -56,6 +56,7 @@
       gnome-tweaks
       gprename
       htop
+      inkscape
       jq
       libreoffice
       localsend

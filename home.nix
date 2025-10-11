@@ -52,6 +52,7 @@
       fzf
       gedit
       git
+      gimp
       gnome-tweaks
       gprename
       htop

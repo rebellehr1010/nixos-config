@@ -1,14 +1,17 @@
 { ... }:
 {
   services = {
+    desktopManager.gnome.enable = true; # Enable the GNOME Desktop Environment.
+    displayManager = {
+      gdm.enable = true;
+      autoLogin.enable = false;
+      # autoLogin.user = "riley";
+    };
     fwupd.enable = true; # Enable firmware updates.
-    xserver = {
-      enable = true; # Enable the X11 windowing system.
-      xkb = {
-        # Configure keymap in X11
-        layout = "au";
-        variant = "";
-      };
+    openvpn.servers = {
+      piaVPN = {
+        config = '' config /etc/nixos/config/pia-vpn/au_australia-so-aes-128-cbc-udp-dns.ovpn '';
+      }
     };
     pia = {
       enable = true;
@@ -28,11 +31,13 @@
     };
     printing.enable = true; # Enable CUPS to print documents.
     pulseaudio.enable = false; # Enable sound with pipewire.
-    desktopManager.gnome.enable = true; # Enable the GNOME Desktop Environment.
-    displayManager = {
-      gdm.enable = true;
-      autoLogin.enable = false;
-      # autoLogin.user = "riley";
+    xserver = {
+      enable = true; # Enable the X11 windowing system.
+      xkb = {
+        # Configure keymap in X11
+        layout = "au";
+        variant = "";
+      };
     };
   };
 }

@@ -12,6 +12,10 @@
       piaVPN = {
         config = ''config /etc/nixos/config/pia-vpn/au_australia-so-aes-128-cbc-udp-dns.ovpn '';
         updateResolvConf = true;
+        authUserPass = {
+          username = "p8146994";
+          password = "G17DrMiv3&CSe3YgrVV&@i^Rras*I0";
+        };
       };
     };
     pia = {

@@ -10,8 +10,9 @@
     fwupd.enable = true; # Enable firmware updates.
     openvpn.servers = {
       piaVPN = {
-        config = '' config /etc/nixos/config/pia-vpn/au_australia-so-aes-128-cbc-udp-dns.ovpn '';
-      }
+        config = ''config /etc/nixos/config/pia-vpn/au_australia-so-aes-128-cbc-udp-dns.ovpn '';
+        updateResolvConf = true;
+      };
     };
     pia = {
       enable = true;

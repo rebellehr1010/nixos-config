@@ -71,6 +71,7 @@
       qbittorrent
       ripgrep
       ruff
+      ryubing
       stm32cubemx
       tailscale
       tldr

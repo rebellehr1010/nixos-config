@@ -8,26 +8,6 @@
       # autoLogin.user = "riley";
     };
     fwupd.enable = true; # Enable firmware updates.
-    openvpn.servers = {
-      piaVPN = {
-        config = ''config /etc/nixos/config/pia-vpn/au_australia-so-aes-128-cbc-udp-dns.ovpn '';
-        updateResolvConf = true;
-        authUserPass = {
-          username = "p8146994";
-          password = "G17DrMiv3&CSe3YgrVV&@i^Rras*I0";
-        };
-      };
-    };
-    pia = {
-      enable = true;
-      authUserPass = {
-        username = "p8146994";
-        password = "G17DrMiv3&CSe3YgrVV&@i^Rras*I0";
-      };
-      # Alternatively, you can use the `authUserPassFile` attribute if you are using a Nix secrets manager. Here's an example using sops-nix.
-      # The secret you provide to `authUserPassFile` should be a multiline string with a single username on the first line a single password on the second line.
-      # authUserPassFile = config.sops.secrets.pia.path;
-    };
     pipewire = {
       enable = true;
       alsa.enable = true;

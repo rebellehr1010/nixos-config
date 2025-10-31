@@ -8,6 +8,26 @@
       # autoLogin.user = "riley";
     };
     fwupd.enable = true; # Enable firmware updates.
+    # pia = {
+    #   enable = true;
+    #   authUserPass = {
+    #     username = "p8146994";
+    #     password = "G17DrMiv3&CSe3YgrVV&@i^Rras*I0";
+    #   };
+    # };
+    openvpn = {
+      servers = {
+        au-perth = {
+          config = ''config /etc/nixos/config/openvpn/au_perth.conf'';
+        };
+        au-melbourne = {
+          config = ''config /etc/nixos/config/openvpn/au_melbourne.conf'';
+        };
+        au-sydney = {
+          config = ''config /etc/nixos/config/openvpn/au_sydney.conf'';
+        };
+      };
+    };
     pipewire = {
       enable = true;
       alsa.enable = true;

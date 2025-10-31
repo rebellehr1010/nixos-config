@@ -70,6 +70,7 @@
       obsidian
       os-prober
       pciutils
+      prusa-slicer
       qbittorrent
       ripgrep
       ruff

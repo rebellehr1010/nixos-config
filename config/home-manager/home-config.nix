@@ -41,7 +41,7 @@
       android-studio
       bat
       brave
-      calibre
+      # calibre
       caprine
       cmake
       dconf-editor

@@ -97,12 +97,26 @@
   dconf = {
     enable = true;
     settings = {
+      "org/gnome/desktop/wm/keybindings" = {
+        switch-to-workspace-up = [ ];
+        switch-to-workspace-down = [ ];
+        switch-to-workspace-left = [ ];
+        switch-to-workspace-right = [ ];
+      };
+      "org/gnome/desktop/wm/preferences".button-layout = ":minimize,maximize,close";
+      "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings" = [
+        "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/"
+      ];
+      "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0" = {
+        binding = "<Control><Alt>t";
+        command = "kgx";
+        name = "Console";
+      };
       "org/gnome/shell" = {
         disable-user-extensions = false;
         enabled-extensions = with pkgs.gnomeExtensions; [
           "dash-to-dock@micxgx.gmail.com"
         ];
-
       };
       "org/gnome/shell/extensions/dash-to-dock" = {
         multi-monitor = true;
@@ -122,13 +136,6 @@
         custom-theme-shrink = true;
         disable-overview-on-startup = false;
         apply-custom-theme = true;
-      };
-      "org/gnome/desktop/wm/preferences".button-layout = ":minimize,maximize,close";
-      "org/gnome/desktop/wm/keybindings" = {
-        switch-to-workspace-up = [ ];
-        switch-to-workspace-down = [ ];
-        switch-to-workspace-left = [ ];
-        switch-to-workspace-right = [ ];
       };
     };
   };

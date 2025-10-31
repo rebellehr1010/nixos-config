@@ -44,6 +44,7 @@
       caprine
       cmake
       dconf-editor
+      discord-ptb
       efibootmgr
       eza
       file

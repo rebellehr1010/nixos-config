@@ -33,6 +33,7 @@
         enabled-extensions = with pkgs.gnomeExtensions; [
           "dash-to-dock@micxgx.gmail.com"
         ];
+        favorit-apps = [];
       };
       "org/gnome/shell/extensions/dash-to-dock" = {
         multi-monitor = true;

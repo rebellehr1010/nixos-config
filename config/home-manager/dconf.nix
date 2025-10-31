@@ -1,5 +1,7 @@
 { pkgs, ... }:
 {
+  # Use `dconf-editor` to find these settings
+  # Use `dconf watch /` to see changes live
   dconf = {
     enable = true;
     settings = {
@@ -27,7 +29,7 @@
         enabled-extensions = with pkgs.gnomeExtensions; [
           "dash-to-dock@micxgx.gmail.com"
         ];
-        favorit-apps = [ ];
+        favorite-apps = [ ];
       };
       "org/gnome/shell/extensions/dash-to-dock" = {
         multi-monitor = true;

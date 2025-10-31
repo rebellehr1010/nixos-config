@@ -17,6 +17,7 @@
       ftff = "flutter test --fail-fast";
       g = "git";
       git-whitespace-fix = "git_whitespace_fix.sh";
+      gst = "git status";
       gsuir = "git submodule update --init --recursive";
       header-include-fix = "header_include_fix.sh";
       ls = "eza";

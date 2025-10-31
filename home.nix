@@ -194,8 +194,8 @@
         zplug load
 
         # Powerlevel10k instant prompt (optional, improves startup)
-        if [[ -r "/etc/config/zsh/.p10k.zsh" ]]; then
-          source "/etc/config/zsh/.p10k.zsh"
+        if [[ -r "/etc/nixos/config/zsh/.p10k.zsh" ]]; then
+          source "/etc/nixos/config/zsh/.p10k.zsh"
         fi
       '';
     };

@@ -28,6 +28,7 @@
       lsta = "start_logging.sh";
       lsto = "tmux kill-session -t logging";
       nrs = "sudo nixos-rebuild switch --flake /etc/nixos"; # Use flake with auto host selection
+      nfu = "nix flake update /etc/nixos";
       prettier = "prettier.sh";
       remove-gcc = "remove_gcc.sh";
       rs = "source ~/.zshrc";
@@ -39,6 +40,7 @@
       tn = "tmux new -A -s";
       update = "update.sh";
     };
+
     packages = with pkgs; [
       android-studio
       bat
@@ -134,9 +136,13 @@
   programs = {
     git = {
       enable = true;
-      userName = "rebellehr1010";
-      userEmail = "riley.lehr@connectsource.com.au";
-      extraConfig.init.defaultBranch = "main";
+      settings = {
+        init.defaultBranch = "main";
+        user = {
+          email = "riley.lehr@connectsource.com.au";
+          name = "rebellehr1010";
+        };
+      };
     };
     home-manager.enable = true;
     zoxide = {

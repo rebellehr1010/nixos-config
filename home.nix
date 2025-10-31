@@ -104,9 +104,11 @@
         switch-to-workspace-right = [ ];
       };
       "org/gnome/desktop/wm/preferences".button-layout = ":minimize,maximize,close";
-      "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings" = [
-        "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/"
-      ];
+      "org/gnome/settings-daemon/plugins/media-keys" = {
+        custom-keybindings = [
+          "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/"
+        ];
+      };
       "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0" = {
         binding = "<Control><Alt>t";
         command = "kgx";

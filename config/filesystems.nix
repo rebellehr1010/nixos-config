@@ -6,6 +6,7 @@
     options = [
       "x-systemd.automount"
       "noauto"
+      "nfsvers=3"
     ];
 
   };
@@ -15,6 +16,7 @@
     options = [
       "x-systemd.automount"
       "noauto"
+      "nfsvers=3"
     ];
   };
 }

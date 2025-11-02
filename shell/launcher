@@ -9,59 +9,105 @@
 #
 # Dependencies: fzf, gtk-launch
 
-# Function to extract a key from a .desktop file
-get_desktop_key() {
-    local file_path="$1"
-    local key="$2"
-    # Grep for the key, take the first match, cut from the first '=', trim whitespace, and remove control characters
-    grep -m1 -E "^${key}=" "$file_path" | cut -d'=' -f2- | sed 's/^ *//;s/ *$//' | tr -d '[:cntrl:]'
-}
-
-# 1. Gather all .desktop files from standard locations
+# 1. Gather all .desktop files from standard locations (use fd for speed)
 mapfile -t desktop_files < <(
-    # Use -L to follow symlinks and drop -type f so that symlinked .desktop entries are included.
-    # Many NixOS application .desktop files are symlinks into the nix store, and -type f would
-    # filter them out. Matching by name alone is sufficient here.
-    find -L /usr/share/applications \
-        /usr/local/share/applications \
-        "$HOME/.local/share/applications" \
-        "/run/current-system/sw/share/applications" \
-        "/etc/profiles/per-user/riley/share/applications" \
-        -maxdepth 1 -name "*.desktop" 2>/dev/null
+    fd -L -d 1 -e desktop -t f '.*' \
+       /usr/share/applications \
+       /usr/local/share/applications \
+       "$HOME/.local/share/applications" \
+       /run/current-system/sw/share/applications \
+       /etc/profiles/per-user/riley/share/applications 2>/dev/null
 )
 
 if [ "${#desktop_files[@]}" -eq 0 ]; then
-    echo "No .desktop files found in /usr/share/applications, /usr/local/share/applications, or ~/.local/share/applications."
+    echo "No .desktop files found"
     exit 1
 fi
 
-# 2. Build a list of lines: "Name|desktop_id|escaped_info"
-declare -a fzf_items
+# --- optional caching layer (insert before building fzf_items) ---
+cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/gui-launcher"
+cache_file="$cache_dir/desktop_list.txt"
+stamp_file="$cache_dir/desktop_stamp"
 
+mkdir -p "$cache_dir"
+
+# Compute a stamp: list of file paths with mtimes. Fast and stable.
+current_stamp=$(
+    printf '%s\n' "${desktop_files[@]}" |
+        xargs -r stat --format='%n:%Y' 2>/dev/null | sort | sha1sum | awk '{print $1}'
+)
+
+# Load from cache if stamp matches and cache exists
+if [ -f "$cache_file" ] && [ -f "$stamp_file" ] && [ "$(cat "$stamp_file")" = "$current_stamp" ]; then
+    mapfile -t fzf_items < "$cache_file"
+else
+    # Build fzf_items using the fast parser snippet (run the loop above)
+    # After building, write to cache
+    printf '%s\n' "${fzf_items[@]}" > "$cache_file"
+    printf '%s' "$current_stamp" > "$stamp_file"
+fi
+# --- end caching layer ---
+
+
+# 2. Build a list of lines: "Name|desktop_id|escaped_info"
+# Build fzf_items quickly by parsing each .desktop exactly once with awk
+declare -a fzf_items=()
 for file_path in "${desktop_files[@]}"; do
     desktop_id=$(basename "$file_path" .desktop)
 
-    name_line=$(get_desktop_key "$file_path" "Name")
-    # Use desktop_id as name if Name field is missing or empty
-    [ -z "$name_line" ] && name_line="$desktop_id"
+    # awk extracts the first occurrence of Name (or Name[xx]) and the other keys.
+    # It prints a single line: Name|desktop_id|info_with_newlines_escaped
+    item_line=$(
+        awk -v id="$desktop_id" '
+            BEGIN {
+                name=""; comment=""; generic=""; exec=""; icon="";
+                IGNORECASE=0
+            }
+            # match keys optionally with locale tag like Name[en_US]=
+            /^[[:space:]]*Name([[][^]]+[]])?[[:space:]]*=/ && name=="" {
+                sub(/^[^=]*=/,"");
+                gsub(/\r$/,"");
+                name = $0;
+            }
+            /^[[:space:]]*Comment([[][^]]+[]])?[[:space:]]*=/ && comment=="" {
+                sub(/^[^=]*=/,"");
+                gsub(/\r$/,"");
+                comment = $0;
+            }
+            /^[[:space:]]*GenericName([[][^]]+[]])?[[:space:]]*=/ && generic=="" {
+                sub(/^[^=]*=/,"");
+                gsub(/\r$/,"");
+                generic = $0;
+            }
+            /^[[:space:]]*Exec[[:space:]]*=/ && exec=="" {
+                sub(/^[^=]*=/,"");
+                gsub(/\r$/,"");
+                exec = $0;
+            }
+            /^[[:space:]]*Icon[[:space:]]*=/ && icon=="" {
+                sub(/^[^=]*=/,"");
+                gsub(/\r$/,"");
+                icon = $0;
+            }
+            END {
+                if (name == "") name = id;
+                info = "";
+                if (generic != "") info = info "Generic Name: " generic "\n";
+                if (comment != "") info = info "Comment: " comment "\n";
+                if (icon    != "") info = info "Icon: " icon "\n";
+                if (exec    != "") info = info "Exec: " exec "\n";
+                # escape literal newlines to \n for safe one-line output
+                gsub(/\n/,"\\n", info);
+                # strip control chars that might confuse fzf UI
+                gsub(/[\x00-\x1F\x7F]/,"", name);
+                gsub(/[\x00-\x1F\x7F]/,"", info);
+                printf "%s|%s|%s\n", name, id, info;
+            }
+        ' "$file_path"
+    )
 
-    comment=$(get_desktop_key "$file_path" "Comment")
-    generic_name=$(get_desktop_key "$file_path" "GenericName")
-    exec_command=$(get_desktop_key "$file_path" "Exec")
-    icon=$(get_desktop_key "$file_path" "Icon")
-
-    info_string=""
-    [ -n "$generic_name" ] && info_string+="Generic Name: $generic_name"$'\n'
-    [ -n "$comment" ] && info_string+="Comment: $comment"$'\n'
-    [ -n "$icon" ] && info_string+="Icon: $icon"$'\n'
-    [ -n "$exec_command" ] && info_string+="Exec: $exec_command"$'\n'
-
-    # Escape literal newlines in info_string so each array entry stays on one line for fzf processing
-    # and preview can correctly interpret them using printf "%b"
-    info_escaped=$(printf '%s' "$info_string" | sed ':a;N;s/\n/\\n/g;ba')
-
-    # Join fields with a delimiter (here: |)
-    fzf_items+=("${name_line}|${desktop_id}|${info_escaped}")
+    # Only add non-empty lines
+    [ -n "$item_line" ] && fzf_items+=("$item_line")
 done
 
 # 3. If no entries at all, bail out
@@ -79,7 +125,7 @@ fi
 # The output of fzf (with --with-nth=1) will be just the Name.
 selection=$(
     printf '%s\n' "${fzf_items[@]}" |
-        sort | # Sort the items alphabetically by Name
+        LC_COLLATE=C sort | # Sort the items alphabetically by Name
         # Clear any global defaults for this fzf call only
         env FZF_DEFAULT_OPTS= \
             fzf --height 40% \

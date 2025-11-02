@@ -17,10 +17,10 @@
     # };
     openvpn = {
       servers = {
-        au-perth = {
-          config = ''config /etc/nixos/config/openvpn/au_perth.conf'';
-          updateResolvConf = true;
-        };
+        # au-perth = {
+        #   config = ''config /etc/nixos/config/openvpn/au_perth.conf'';
+        #   updateResolvConf = true;
+        # };
         # au-melbourne = {
         #   config = ''config /etc/nixos/config/openvpn/au_melbourne.conf'';
         #   updateResolvConf = true;

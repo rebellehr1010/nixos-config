@@ -1,5 +1,63 @@
 { pkgs, ... }:
 {
+  home = {
+    packages = with pkgs; [
+      android-studio
+      bat
+      brave
+      # calibre
+      caprine
+      cmake
+      dconf-editor
+      discord-ptb
+      efibootmgr
+      eza
+      fd
+      file
+      fzf
+      gedit
+      git
+      gimp
+      gnome-tweaks
+      gprename
+      htop
+      inkscape
+      jq
+      libreoffice
+      localsend
+      micro
+      ncdu
+      ninja
+      nixfmt
+      nodejs
+      obsidian
+      os-prober
+      pciutils
+      prusa-slicer
+      qbittorrent
+      ripgrep
+      ruff
+      ryubing
+      stm32cubemx
+      tailscale
+      tldr
+      tmux
+      ty
+      unzip
+      usbutils
+      uv
+      vscode
+      wget
+      whatsapp-electron
+      which
+      yq-go
+      zip
+      zoxide
+      zplug
+      zsh
+    ];
+  };
+
   programs = {
     git = {
       enable = true;

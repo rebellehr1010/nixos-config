@@ -5,16 +5,8 @@
     displayManager = {
       gdm.enable = true;
       autoLogin.enable = false;
-      # autoLogin.user = "riley";
     };
     fwupd.enable = true; # Enable firmware updates.
-    # pia = {
-    #   enable = true;
-    #   authUserPass = {
-    #     username = "p8146994";
-    #     password = "G17DrMiv3&CSe3YgrVV&@i^Rras*I0";
-    #   };
-    # };
     openvpn = {
       servers = {
         # au-perth = {

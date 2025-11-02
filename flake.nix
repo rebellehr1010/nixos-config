@@ -10,11 +10,6 @@
       url = "github:nix-community/home-manager/master";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    pia = {
-      url = "github:Fuwn/pia.nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
   };
 
   outputs =
@@ -22,7 +17,6 @@
       self,
       nixpkgs,
       home-manager,
-      pia,
       ...
     }:
     {
@@ -42,7 +36,6 @@
             ./config/time.nix
             ./config/users.nix
             home-manager.nixosModules.home-manager
-            pia.nixosModules."x86_64-linux".default
             {
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;

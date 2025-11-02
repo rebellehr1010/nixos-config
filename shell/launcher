@@ -19,10 +19,15 @@ get_desktop_key() {
 
 # 1. Gather all .desktop files from standard locations
 mapfile -t desktop_files < <(
-    find /usr/share/applications \
+    # Use -L to follow symlinks and drop -type f so that symlinked .desktop entries are included.
+    # Many NixOS application .desktop files are symlinks into the nix store, and -type f would
+    # filter them out. Matching by name alone is sufficient here.
+    find -L /usr/share/applications \
         /usr/local/share/applications \
         "$HOME/.local/share/applications" \
-        -maxdepth 1 -type f -name "*.desktop" 2>/dev/null
+        "/run/current-system/sw/share/applications" \
+        "/etc/profiles/per-user/riley/share/applications" \
+        -maxdepth 1 -name "*.desktop" 2>/dev/null
 )
 
 if [ "${#desktop_files[@]}" -eq 0 ]; then

@@ -2,15 +2,19 @@
 {
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users = {
+    groups = {
+      libvirtd.members = [ "riley" ];
+      kvm.members = [ "riley" ];
+    };
     users.riley = {
-      isNormalUser = true;
       description = "riley";
       extraGroups = [
         "networkmanager"
         "wheel"
       ];
-      shell = pkgs.zsh;
+      isNormalUser = true;
       # packages = with pkgs; [ ];
+      shell = pkgs.zsh;
     };
   };
 }

@@ -35,6 +35,7 @@
             ./config/systemd.nix
             ./config/time.nix
             ./config/users.nix
+            ./config/virtualisation.nix
             home-manager.nixosModules.home-manager
             {
               home-manager.useGlobalPkgs = true;

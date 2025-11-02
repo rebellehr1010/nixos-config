@@ -1,7 +1,7 @@
 { ... }:
 {
-  fileSystems."/mnt/server_media" = {
-    device = "192.168.1.71:/server_media";
+  fileSystems."/mnt/server/server_media" = {
+    device = "192.168.1.71:/mnt/HDDs/server_media";
     fsType = "nfs";
     options = [
       "x-systemd.automount"
@@ -9,8 +9,8 @@
     ];
 
   };
-  fileSystems."/mnt/apps" = {
-    device = "192.168.1.71:/apps";
+  fileSystems."/mnt/server/apps" = {
+    device = "192.168.1.71:/mnt/app_pool/apps";
     fsType = "nfs";
     options = [
       "x-systemd.automount"

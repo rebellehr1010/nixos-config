@@ -11,6 +11,7 @@
       dconf-editor
       discord-ptb
       efibootmgr
+      ethtool
       eza
       fd
       file

@@ -26,6 +26,7 @@
           baseModules = [
             ./config/boot.nix
             ./config/configuration.nix
+            ./config/filesystems.nix
             ./config/hardware.nix
             ./config/internationalisation.nix
             ./config/networking.nix

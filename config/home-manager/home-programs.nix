@@ -28,6 +28,7 @@
       localsend
       micro
       ncdu
+      nfs-utils
       ninja
       nixfmt
       nodejs

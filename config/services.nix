@@ -32,6 +32,7 @@
     printing.enable = true; # Enable CUPS to print documents.
     pulseaudio.enable = false; # Enable sound with pipewire.
     qbittorrent.enable = true; # Enable qBittorrent client service.
+    rpcbind.enable = true; # Enable rpcbind for NFS support.
     tailscale.enable = true; # Enable Tailscale VPN.
     xserver = {
       enable = true; # Enable the X11 windowing system.

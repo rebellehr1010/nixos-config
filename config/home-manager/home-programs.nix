@@ -47,6 +47,7 @@
       unzip
       usbutils
       uv
+      virt-viewer
       vscode
       wget
       whatsapp-electron

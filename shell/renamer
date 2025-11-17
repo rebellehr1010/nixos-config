@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+
+# Bulk renamer for TV show episodes
+# Usage: renamer.sh <Show Folder>
+
+set -e
+
+if [ "$#" -ne 1 ]; then
+	echo "Usage: $0 <Show Folder>"
+	exit 1
+fi
+
+show_dir="$1"
+show_name="$(basename "$show_dir")"
+
+find_season_dirs() {
+	find "$show_dir" -mindepth 1 -maxdepth 1 -type d -name 'Season *' | sort
+}
+
+zero_pad() {
+	printf "%02d" "$1"
+}
+
+# Read all season paths into an array
+mapfile -t season_paths < <(find_season_dirs)
+
+for season_path in "${season_paths[@]}"; do
+	season_name="$(basename "$season_path")"
+	season_num=$(echo "$season_name" | grep -oE '[0-9]+' | head -1)
+	
+	if [ -z "$season_num" ]; then
+		echo "Skipping '$season_name' - unable to extract season number"
+		continue
+	fi
+	
+	season_num_padded=$(zero_pad "$season_num")
+
+	echo -e "\nPreview for $season_name:"
+	episode_num=1
+	declare -a old_names
+	declare -a new_names
+	for ep_path in "$season_path"/*; do
+		[ -f "$ep_path" ] || continue
+		ext="${ep_path##*.}"
+		ep_num_padded=$(zero_pad "$episode_num")
+		new_name="$show_name - S${season_num_padded}E${ep_num_padded}.$ext"
+		old_names+=("$ep_path")
+		new_names+=("$season_path/$new_name")
+		printf "  %s -> %s\n" "$(basename "$ep_path")" "$new_name"
+		episode_num=$((episode_num + 1))
+	done
+
+	if [ "${#old_names[@]}" -eq 0 ]; then
+		echo "  (No files to rename in $season_name)"
+		continue
+	fi
+
+	read -p "Proceed with renaming for $season_name? [y/N]: " confirm
+	if [[ "$confirm" =~ ^[Yy]$ ]]; then
+		for i in "${!old_names[@]}"; do
+			mv -n "${old_names[$i]}" "${new_names[$i]}"
+		done
+		echo "Renamed files in $season_name."
+	else
+		echo "Skipped $season_name."
+	fi
+done

@@ -26,7 +26,7 @@
       lsta = "start_logging.sh";
       lsto = "tmux kill-session -t logging";
       nrs = "sudo nixos-rebuild switch --flake /etc/nixos"; # Use flake with auto host selection
-      nfu = "nix flake update /etc/nixos";
+      nfu = "nix flake update";
       prettier = "prettier.sh";
       remove-gcc = "remove_gcc.sh";
       rs = "source ~/.zshrc";

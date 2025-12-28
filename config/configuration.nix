@@ -5,10 +5,17 @@
 { inputs, ... }:
 {
   # imports = [# Include the results of the hardware scan.];
-  nix.settings.experimental-features = [
-    "nix-command"
-    "flakes"
-  ];
+  nix = {
+    optimise.automatic = true;
+    settings = {
+      aut-optimise-store = true; # Potentially slows down builds.
+      experimental-features = [
+        "nix-command"
+        "flakes"
+      ];
+    };
+  };
+
   nixpkgs.config.allowUnfree = true;
 
   # This value determines the NixOS release from which the default

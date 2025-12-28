@@ -8,7 +8,7 @@
   nix = {
     optimise.automatic = true;
     settings = {
-      aut-optimise-store = true; # Potentially slows down builds.
+      auto-optimise-store = true; # Potentially slows down builds.
       experimental-features = [
         "nix-command"
         "flakes"

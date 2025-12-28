@@ -54,6 +54,7 @@
       which
       yq-go
       zip
+      zoom
       zoxide
       zplug
       zsh

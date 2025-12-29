@@ -18,6 +18,7 @@
         custom-keybindings = [
           "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/"
           "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/"
+          "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/"
         ];
       };
       "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0" = {
@@ -29,6 +30,11 @@
         binding = "<Super>e";
         command = "nautilus";
         name = "Files";
+      };
+      "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2" = {
+        binding = "<Super><Shift>s";
+        command = "gnome-screenshot -i";
+        name = "Screenshot";
       };
       "org/gnome/shell" = {
         disable-user-extensions = false;

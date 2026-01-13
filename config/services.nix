@@ -1,4 +1,4 @@
-{ ... }:
+{ pkgs, ... }:
 {
   services = {
     desktopManager.gnome.enable = true; # Enable the GNOME Desktop Environment.
@@ -34,6 +34,7 @@
     qbittorrent.enable = true; # Enable qBittorrent client service.
     rpcbind.enable = true; # Enable rpcbind for NFS support.
     tailscale.enable = true; # Enable Tailscale VPN.
+    udev.packages = [ pkgs.libmtp ];
     xserver = {
       enable = true; # Enable the X11 windowing system.
       xkb = {

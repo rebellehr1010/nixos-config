@@ -5,8 +5,12 @@
   environment = {
     systemPackages = with pkgs; [
       inputs.nix-software-center.packages."${pkgs.system}".nix-software-center
-      gnome-boxes
       dnsmasq
+      gnome-boxes
+      gvfs
+      jmtpfs
+      libmtp
+      mtpfs
       phodav
     ];
     variables.EDITOR = "micro";

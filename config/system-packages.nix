@@ -7,10 +7,6 @@
       inputs.nix-software-center.packages."${pkgs.system}".nix-software-center
       dnsmasq
       gnome-boxes
-      gvfs
-      jmtpfs
-      libmtp
-      mtpfs
       phodav
     ];
     variables.EDITOR = "micro";

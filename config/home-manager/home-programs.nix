@@ -42,6 +42,7 @@
       ruff
       ryubing
       tailscale
+      thunderbird
       tldr
       tmux
       ty

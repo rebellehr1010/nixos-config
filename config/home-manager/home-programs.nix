@@ -10,6 +10,7 @@
       cmake
       dconf-editor
       discord-ptb
+      dnsmasq
       efibootmgr
       ethtool
       eza
@@ -81,6 +82,7 @@
       ];
     };
     home-manager.enable = true;
+    # virt-manager.enable = true;
     zoxide = {
       enable = true;
       enableZshIntegration = true;

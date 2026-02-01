@@ -4,7 +4,7 @@
   # $ nix search wget
   environment = {
     systemPackages = with pkgs; [
-      inputs.nix-software-center.packages."${pkgs.system}".nix-software-center
+      inputs.nix-software-center.packages."${pkgs.stdenv.hostPlatform.system}".nix-software-center
       dnsmasq
       gnome-boxes
       phodav

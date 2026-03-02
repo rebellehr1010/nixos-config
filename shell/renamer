@@ -1,16 +1,72 @@
 #!/usr/bin/env bash
 
 # Bulk renamer for TV show episodes
-# Usage: renamer.sh <Show Folder>
 
 set -e
 
-if [ "$#" -ne 1 ]; then
-	echo "Usage: $0 <Show Folder>"
+show_help() {
+	cat << EOF
+Usage: $(basename "$0") [OPTIONS] <Show Folder>
+
+Bulk rename TV show episodes in a structured folder.
+
+Arguments:
+  <Show Folder>         Path to the show directory containing Season folders
+
+Options:
+  -s, --start <number>  Starting episode number (default: 1)
+  -h, --help            Display this help message
+
+Example:
+  $(basename "$0") "/path/to/Show Name"
+  $(basename "$0") -s 5 "/path/to/Show Name"
+EOF
+	exit 0
+}
+
+# Default values
+start_episode=1
+show_dir=""
+
+# Parse arguments
+while [ "$#" -gt 0 ]; do
+	case "$1" in
+		-h|--help)
+			show_help
+			;;
+		-s|--start)
+			if [ -n "$2" ] && [ "$2" -eq "$2" ] 2>/dev/null; then
+				start_episode="$2"
+				shift 2
+			else
+				echo "Error: -s/--start requires a numeric argument"
+				exit 1
+			fi
+			;;
+		-*)
+			echo "Error: Unknown option: $1"
+			echo "Use -h or --help for usage information"
+			exit 1
+			;;
+		*)
+			if [ -z "$show_dir" ]; then
+				show_dir="$1"
+				shift
+			else
+				echo "Error: Multiple show directories specified"
+				exit 1
+			fi
+			;;
+	esac
+done
+
+# Validate required arguments
+if [ -z "$show_dir" ]; then
+	echo "Error: Show folder is required"
+	echo "Use -h or --help for usage information"
 	exit 1
 fi
 
-show_dir="$1"
 show_name="$(basename "$show_dir")"
 
 find_season_dirs() {
@@ -35,8 +91,8 @@ for season_path in "${season_paths[@]}"; do
 	
 	season_num_padded=$(zero_pad "$season_num")
 
-	echo -e "\nPreview for $season_name:"
-	episode_num=1
+	echo -e "\nPreview for $season_name (starting at episode $start_episode):"
+	episode_num="$start_episode"
 	declare -a old_names
 	declare -a new_names
 	for ep_path in "$season_path"/*; do

@@ -7,6 +7,7 @@
       inputs.nix-software-center.packages."${pkgs.stdenv.hostPlatform.system}".nix-software-center
       dnsmasq
       gnome-boxes
+      openssl
       phodav
     ];
     variables.EDITOR = "micro";

@@ -53,7 +53,6 @@
       virt-viewer
       vscode
       wget
-      whatsapp-electron
       which
       yq-go
       zip

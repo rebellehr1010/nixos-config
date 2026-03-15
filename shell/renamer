@@ -14,18 +14,15 @@ Arguments:
   <Show Folder>         Path to the show directory containing Season folders
 
 Options:
-  -s, --start <number>  Starting episode number (default: 1)
   -h, --help            Display this help message
 
 Example:
   $(basename "$0") "/path/to/Show Name"
-  $(basename "$0") -s 5 "/path/to/Show Name"
 EOF
 	exit 0
 }
 
 # Default values
-start_episode=1
 show_dir=""
 
 # Parse arguments
@@ -33,15 +30,6 @@ while [ "$#" -gt 0 ]; do
 	case "$1" in
 		-h|--help)
 			show_help
-			;;
-		-s|--start)
-			if [ -n "$2" ] && [ "$2" -eq "$2" ] 2>/dev/null; then
-				start_episode="$2"
-				shift 2
-			else
-				echo "Error: -s/--start requires a numeric argument"
-				exit 1
-			fi
 			;;
 		-*)
 			echo "Error: Unknown option: $1"
@@ -80,6 +68,11 @@ zero_pad() {
 # Read all season paths into an array
 mapfile -t season_paths < <(find_season_dirs)
 
+if [ "${#season_paths[@]}" -eq 0 ]; then
+	echo "Error: No 'Season *' folders found in '$show_dir'"
+	exit 1
+fi
+
 for season_path in "${season_paths[@]}"; do
 	season_name="$(basename "$season_path")"
 	season_num=$(echo "$season_name" | grep -oE '[0-9]+' | head -1)
@@ -91,33 +84,63 @@ for season_path in "${season_paths[@]}"; do
 	
 	season_num_padded=$(zero_pad "$season_num")
 
-	echo -e "\nPreview for $season_name (starting at episode $start_episode):"
-	episode_num="$start_episode"
-	declare -a old_names
-	declare -a new_names
-	for ep_path in "$season_path"/*; do
-		[ -f "$ep_path" ] || continue
-		ext="${ep_path##*.}"
-		ep_num_padded=$(zero_pad "$episode_num")
-		new_name="$show_name - S${season_num_padded}E${ep_num_padded}.$ext"
-		old_names+=("$ep_path")
-		new_names+=("$season_path/$new_name")
-		printf "  %s -> %s\n" "$(basename "$ep_path")" "$new_name"
-		episode_num=$((episode_num + 1))
-	done
+	       echo -e "\n$season_name"
+	       read -p "Enter starting episode number (default: 1): " start_episode
+	       start_episode=${start_episode:-1}
+	       
+	       # Validate input is numeric
+	       if ! [[ "$start_episode" =~ ^[0-9]+$ ]]; then
+		       echo "Error: Starting episode must be a number. Skipping $season_name."
+		       continue
+	       fi
+	       
+	       echo -e "\nPreview for $season_name (starting at episode $start_episode):"
+	       episode_num="$start_episode"
+	       old_names=()
+	       new_names=()
+	       old_basenames=()
+	       new_basenames=()
+	       for ep_path in "$season_path"/*; do
+		       [ -f "$ep_path" ] || continue
+		       ext="${ep_path##*.}"
+		       ep_num_padded=$(zero_pad "$episode_num")
+		       new_name="$show_name - S${season_num_padded}E${ep_num_padded}.$ext"
+		       old_names+=("$ep_path")
+		       new_names+=("$season_path/$new_name")
+		       old_basenames+=("$(basename "$ep_path")")
+		       new_basenames+=("$new_name")
+		       episode_num=$((episode_num + 1))
+	       done
 
-	if [ "${#old_names[@]}" -eq 0 ]; then
-		echo "  (No files to rename in $season_name)"
-		continue
-	fi
+	       if [ "${#old_names[@]}" -eq 0 ]; then
+		       echo "  (No files to rename in $season_name)"
+		       continue
+	       fi
 
-	read -p "Proceed with renaming for $season_name? [y/N]: " confirm
-	if [[ "$confirm" =~ ^[Yy]$ ]]; then
-		for i in "${!old_names[@]}"; do
-			mv -n "${old_names[$i]}" "${new_names[$i]}"
-		done
-		echo "Renamed files in $season_name."
-	else
-		echo "Skipped $season_name."
-	fi
+	       # Find max width for alignment
+	       max_old=0
+	       max_new=0
+	       for i in "${!old_basenames[@]}"; do
+		       [ ${#old_basenames[$i]} -gt $max_old ] && max_old=${#old_basenames[$i]}
+		       [ ${#new_basenames[$i]} -gt $max_new ] && max_new=${#new_basenames[$i]}
+	       done
+
+	       # Print header
+	       printf "  %-${max_old}s | %s\n" "Current Name" "New Name"
+	       printf "  %-${max_old}s-+-%s\n" "$(printf '%.0s-' $(seq 1 $max_old))" "$(printf '%.0s-' $(seq 1 $max_new))"
+
+	       # Print table rows
+	       for i in "${!old_basenames[@]}"; do
+		       printf "  %-${max_old}s | %s\n" "${old_basenames[$i]}" "${new_basenames[$i]}"
+	       done
+
+	       read -p "Proceed with renaming for $season_name? [y/N]: " confirm
+	       if [[ "$confirm" =~ ^[Yy]$ ]]; then
+		       for i in "${!old_names[@]}"; do
+			       mv -n "${old_names[$i]}" "${new_names[$i]}"
+		       done
+		       echo "Renamed files in $season_name."
+	       else
+		       echo "Skipped $season_name."
+	       fi
 done

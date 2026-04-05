@@ -54,6 +54,7 @@
       vscode
       wget
       which
+      yad
       yq-go
       zip
       zoom

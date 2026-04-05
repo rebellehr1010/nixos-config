@@ -3,7 +3,7 @@
   networking = {
     firewall.enable = false;
     hosts = {
-      "192.168.0.71" = [ "riley-server" ];
+      "192.168.1.71" = [ "riley-server" ];
     };
     networkmanager = {
       enable = true;

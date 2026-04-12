@@ -29,7 +29,7 @@
 
           timerConfig = {
             OnStartupSec = "10s";
-            OnUnitActiveSec = "20s";
+            OnUnitActiveSec = "1m";
             Unit = "nixos-git-watch.service";
           };
         };

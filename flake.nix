@@ -48,7 +48,7 @@
           hostDirs = {
             nixos-framework = ./config/hosts/nixos-framework;
             nixos-desktop = ./config/hosts/nixos-desktop;
-            nixos-framework-envy = ./config/hosts/nixos-framework-envy;
+            nixos-framework-envy = ./config/hosts/nixos-hp-envy;
           };
           # Build a NixOS system for each host, avoiding fragile path concatenation.
           mkHost =

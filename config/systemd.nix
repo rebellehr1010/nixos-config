@@ -28,8 +28,8 @@
           wantedBy = [ "timers.target" ];
 
           timerConfig = {
-            OnStartupSec = "10s";
-            OnUnitActiveSec = "1m";
+            OnStartupSec = "1m";
+            OnUnitActiveSec = "10m";
             Unit = "nixos-git-watch.service";
           };
         };

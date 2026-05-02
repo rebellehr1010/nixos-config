@@ -6,7 +6,12 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+    }:
     let
       supportedSystems = [ "x86_64-linux" ];
 
@@ -31,16 +36,24 @@
         apps.default = {
           type = "app";
           program = "${package}/bin/AnycubicSlicerNext";
+          meta = {
+            description = package.meta.description;
+          };
         };
 
-        formatter = pkgs.nixfmt-rfc-style;
+        formatter = pkgs.nixfmt;
       }
     )
     // {
       overlays.default = overlay;
 
       nixosModules.default =
-        { config, lib, pkgs, ... }:
+        {
+          config,
+          lib,
+          pkgs,
+          ...
+        }:
         let
           cfg = config.programs.anycubicSlicer;
           defaultPackage = pkgs.callPackage ./package.nix { };

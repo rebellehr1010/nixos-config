@@ -1,4 +1,9 @@
-{ lib, appimageTools, fetchurl }:
+{
+  lib,
+  appimageTools,
+  fetchurl,
+  runtimeShell,
+}:
 
 let
   pname = "anycubic-slicer-next";
@@ -17,15 +22,50 @@ in
 appimageTools.wrapType2 {
   inherit pname version src;
 
-  extraInstallCommands = ''
-    install -Dm444 ${appimageContents}/AnycubicSlicer.desktop \
-      $out/share/applications/AnycubicSlicer.desktop
-    install -Dm444 ${appimageContents}/share/icons/hicolor/256x256/apps/AnycubicSlicer.png \
-      $out/share/icons/hicolor/256x256/apps/AnycubicSlicer.png
-    install -Dm444 ${appimageContents}/AnycubicSlicer.svg \
-      $out/share/icons/hicolor/scalable/apps/AnycubicSlicer.svg
+  extraPkgs =
+    pkgs: with pkgs; [
+      stdenv.cc.cc.lib
+      cairo
+      dbus
+      expat
+      fontconfig
+      gdk-pixbuf
+      glib
+      gst_all_1.gstreamer
+      gst_all_1.gst-plugins-base
+      gtk3
+      libglvnd
+      libsoup_3
+      libx11
+      pango
+      wayland
+      webkitgtk_4_1
+      zlib
+    ];
 
-    ln -s $out/bin/${pname} $out/bin/AnycubicSlicerNext
+  extraInstallCommands = ''
+        mv $out/bin/${pname} $out/bin/.${pname}-wrapped
+        cat > $out/bin/${pname} <<'EOF'
+    #!${runtimeShell}
+    script_path="$(readlink -f "$0")"
+    script_dir="$(dirname "$script_path")"
+    if [ -n "''${HOME:-}" ] && [ -d "''${HOME}" ]; then
+      cd "''${HOME}"
+    else
+      cd /tmp
+    fi
+    exec "$script_dir/.${pname}-wrapped" "$@"
+    EOF
+        chmod 755 $out/bin/${pname}
+
+        install -Dm444 ${appimageContents}/AnycubicSlicer.desktop \
+          $out/share/applications/AnycubicSlicer.desktop
+        install -Dm444 ${appimageContents}/share/icons/hicolor/256x256/apps/AnycubicSlicer.png \
+          $out/share/icons/hicolor/256x256/apps/AnycubicSlicer.png
+        install -Dm444 ${appimageContents}/AnycubicSlicer.svg \
+          $out/share/icons/hicolor/scalable/apps/AnycubicSlicer.svg
+
+        ln -s $out/bin/${pname} $out/bin/AnycubicSlicerNext
   '';
 
   meta = {

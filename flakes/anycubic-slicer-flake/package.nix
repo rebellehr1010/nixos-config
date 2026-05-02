@@ -34,6 +34,7 @@ appimageTools.wrapType2 {
       gst_all_1.gstreamer
       gst_all_1.gst-plugins-base
       gtk3
+      mesa
       libglvnd
       libsoup_3
       libx11
@@ -47,8 +48,14 @@ appimageTools.wrapType2 {
         mv $out/bin/${pname} $out/bin/.${pname}-wrapped
         cat > $out/bin/${pname} <<'EOF'
     #!${runtimeShell}
-    script_path="$(readlink -f "$0")"
-    script_dir="$(dirname "$script_path")"
+    script_dir=''${BASH_SOURCE[0]%/*}
+    if [ "$script_dir" = "''${BASH_SOURCE[0]}" ]; then
+      script_dir=$PWD
+    fi
+    case "$script_dir" in
+      /*) ;;
+      *) script_dir="$PWD/$script_dir" ;;
+    esac
     if [ -n "''${HOME:-}" ] && [ -d "''${HOME}" ]; then
       cd "''${HOME}"
     else

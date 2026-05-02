@@ -1,6 +1,7 @@
 {
   lib,
   appimageTools,
+  coreutils,
   fetchurl,
   runtimeShell,
 }:
@@ -48,14 +49,8 @@ appimageTools.wrapType2 {
         mv $out/bin/${pname} $out/bin/.${pname}-wrapped
         cat > $out/bin/${pname} <<'EOF'
     #!${runtimeShell}
-    script_dir=''${BASH_SOURCE[0]%/*}
-    if [ "$script_dir" = "''${BASH_SOURCE[0]}" ]; then
-      script_dir=$PWD
-    fi
-    case "$script_dir" in
-      /*) ;;
-      *) script_dir="$PWD/$script_dir" ;;
-    esac
+    script_path="$(${lib.getExe' coreutils "readlink"} -f "$0")"
+    script_dir=''${script_path%/*}
     if [ -n "''${HOME:-}" ] && [ -d "''${HOME}" ]; then
       cd "''${HOME}"
     else

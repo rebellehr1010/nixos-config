@@ -6,6 +6,10 @@
     # branch "nixos-unstable" instead of "23.11" (the latest stable release).
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     nix-software-center.url = "github:snowfallorg/nix-software-center";
+    anycubic-slicer = {
+      url = "path:./flakes/anycubic-slicer-flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     home-manager = {
       url = "github:nix-community/home-manager/master";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -32,6 +36,7 @@
             ./config/networking.nix
             ./config/security.nix
             ./config/services.nix
+            inputs.anycubic-slicer.nixosModules.default
             ./config/system-packages.nix
             ./config/systemd.nix
             ./config/time.nix

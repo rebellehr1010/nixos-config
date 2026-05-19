@@ -4,6 +4,8 @@
     avahi = {
       enable = true;
       nssmdns4 = true;
+      nssmdns6 = true;
+      openFirewall = true;
     };
     desktopManager.gnome.enable = true; # Enable the GNOME Desktop Environment.
     displayManager = {

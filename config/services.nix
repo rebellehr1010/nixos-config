@@ -1,6 +1,10 @@
 { ... }:
 {
   services = {
+    avahi = {
+      enable = true;
+      nssmdns4 = true;
+    };
     desktopManager.gnome.enable = true; # Enable the GNOME Desktop Environment.
     displayManager = {
       gdm.enable = true;
@@ -32,6 +36,13 @@
     printing.enable = true; # Enable CUPS to print documents.
     pulseaudio.enable = false; # Enable sound with pipewire.
     qbittorrent.enable = true; # Enable qBittorrent client service.
+    resolved = {
+      enable = true;
+      settings.Resolve = {
+        LLMNR = true;
+        MulticastDNS = true;
+      };
+    };
     rpcbind.enable = true; # Enable rpcbind for NFS support.
     tailscale.enable = true; # Enable Tailscale VPN.
     xserver = {

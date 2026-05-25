@@ -15,6 +15,7 @@
       ethtool
       eza
       fd
+      ffmpeg
       file
       fzf
       gedit

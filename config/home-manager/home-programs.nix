@@ -9,6 +9,7 @@
       # calibre
       caprine
       cmake
+      # davinci-resolve
       dconf-editor
       discord-ptb
       dnsmasq
@@ -29,6 +30,7 @@
       jq
       libreoffice
       localsend
+      losslesscut-bin
       micro
       ncdu
       nfs-utils

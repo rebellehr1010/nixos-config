@@ -3,6 +3,7 @@
   home = {
     packages = with pkgs; [
       android-studio
+      arp-scan
       bat
       brave
       # calibre
@@ -55,6 +56,7 @@
       vscode
       wget
       which
+      wireshark
       yad
       yq-go
       zip

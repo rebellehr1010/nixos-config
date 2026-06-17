@@ -62,7 +62,7 @@
       yad
       yq-go
       zip
-      zoom
+      # zoom
       zoxide
       zplug
       zsh

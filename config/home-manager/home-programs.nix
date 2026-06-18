@@ -119,7 +119,6 @@
           { name = "spwhitt/nix-zsh-completions"; }
           { name = "popstas/zsh-command-time"; }
           { name = "Aloxaf/fzf-tab"; }
-          { name = "unixorn/fzf-zsh-plugin"; }
           { name = "MichaelAquilina/zsh-you-should-use"; }
           { name = "fdellwing/zsh-bat"; }
           { name = "joshskidmore/zsh-fzf-history-search"; }
@@ -160,6 +159,10 @@
           source "/etc/nixos/config/zsh/.p10k.zsh"
         fi
       '';
+    };
+    fzf = {
+      enable = true;
+      enableZshIntegration = true;
     };
   };
 }

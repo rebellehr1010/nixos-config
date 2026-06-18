@@ -129,6 +129,16 @@
       initContent = ''
         source ${pkgs.zplug}/share/zplug/init.zsh
 
+        # Map terminal Ctrl+Arrow escape sequences to word movement in zsh.
+        bindkey -M emacs "^[[1;5D" backward-word
+        bindkey -M emacs "^[[1;5C" forward-word
+        bindkey -M emacs "^[[5D" backward-word
+        bindkey -M emacs "^[[5C" forward-word
+        bindkey -M viins "^[[1;5D" backward-word
+        bindkey -M viins "^[[1;5C" forward-word
+        bindkey -M viins "^[[5D" backward-word
+        bindkey -M viins "^[[5C" forward-word
+
         # Install any missing plugins quietly on first run
         if ! zplug check --verbose; then
           printf '\n[zplug] Installing missing plugins...\n' >&2

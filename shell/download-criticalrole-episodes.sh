@@ -72,7 +72,6 @@ echo "Output dir   : $output_dir"
 echo "Archive file : $archive_file"
 
 yt_dlp_args=(
-    --batch-file "$batch_file"
     --ignore-errors
     --download-archive "$archive_file"
     --force-write-archive
@@ -88,14 +87,60 @@ yt_dlp_args=(
     -P "$output_dir"
 )
 
-set +e
-yt-dlp "${yt_dlp_args[@]}"
-rc=$?
-set -e
+download_one_url() {
+    local url="$1"
+    local attempt rc log_file
 
-printf 'yt-dlp exit code: %s\n' "$rc"
+    for attempt in 1 2; do
+        echo
+        echo "Downloading: $url (attempt $attempt/2)"
+        log_file="$(mktemp)"
 
-if [[ "$rc" -ne 0 ]]; then
+        set +e
+        yt-dlp "${yt_dlp_args[@]}" "$url" 2>&1 | tee "$log_file"
+        rc=${PIPESTATUS[0]}
+        set -e
+
+        if [[ "$rc" -eq 0 ]]; then
+            rm -f "$log_file"
+            return 0
+        fi
+
+        # YouTube bot checks can appear mid-run; retry once so yt-dlp re-reads fresh Brave cookies.
+        if grep -q "Sign in to confirm you.re not a bot" "$log_file" && [[ "$attempt" -lt 2 ]]; then
+            echo "Detected YouTube bot challenge. Retrying with freshly read Brave cookies..."
+            rm -f "$log_file"
+            continue
+        fi
+
+        rm -f "$log_file"
+        return "$rc"
+    done
+}
+
+total=0
+failed=0
+
+while IFS= read -r raw_line || [[ -n "$raw_line" ]]; do
+    line="$(printf '%s' "$raw_line" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')"
+
+    if [[ -z "$line" || "$line" == \#* ]]; then
+        continue
+    fi
+
+    total=$((total + 1))
+    if ! download_one_url "$line"; then
+        failed=$((failed + 1))
+    fi
+done < "$batch_file"
+
+echo
+echo "Processed URLs : $total"
+echo "Failed URLs    : $failed"
+
+rc=0
+if [[ "$failed" -ne 0 ]]; then
+    rc=1
     echo "Some downloads failed this run (often temporary/rate-limit related)."
     echo "Re-run this script; completed episodes in the archive file will be skipped."
 fi

@@ -84,6 +84,7 @@ yt_dlp_args=(
     --sleep-requests 1
     --sleep-interval 2
     --max-sleep-interval 8
+    --cookies-from-browser brave
     -P "$output_dir"
 )
 

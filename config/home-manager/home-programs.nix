@@ -132,12 +132,20 @@
         # Map terminal Ctrl+Arrow escape sequences to word movement in zsh.
         bindkey -M emacs "^[[1;5D" backward-word
         bindkey -M emacs "^[[1;5C" forward-word
+        bindkey -M emacs "^[[1;5H" beginning-of-line
+        bindkey -M emacs "^[[1;5F" end-of-line
         bindkey -M emacs "^[[5D" backward-word
         bindkey -M emacs "^[[5C" forward-word
+        bindkey -M emacs "^[[7;5~" beginning-of-line
+        bindkey -M emacs "^[[8;5~" end-of-line
         bindkey -M viins "^[[1;5D" backward-word
         bindkey -M viins "^[[1;5C" forward-word
+        bindkey -M viins "^[[1;5H" beginning-of-line
+        bindkey -M viins "^[[1;5F" end-of-line
         bindkey -M viins "^[[5D" backward-word
         bindkey -M viins "^[[5C" forward-word
+        bindkey -M viins "^[[7;5~" beginning-of-line
+        bindkey -M viins "^[[8;5~" end-of-line
 
         # Install any missing plugins quietly on first run
         if ! zplug check --verbose; then

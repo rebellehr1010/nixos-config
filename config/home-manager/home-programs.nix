@@ -61,6 +61,7 @@
       wireshark
       yad
       yq-go
+      yt-dlp
       zip
       # zoom
       zoxide

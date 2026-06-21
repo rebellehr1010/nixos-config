@@ -62,6 +62,7 @@
       yad
       yq-go
       yt-dlp
+      zellij
       zip
       # zoom
       zoxide

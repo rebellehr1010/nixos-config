@@ -6,7 +6,7 @@
       arp-scan
       bat
       brave
-      # calibre
+      calibre
       caprine
       cmake
       # davinci-resolve

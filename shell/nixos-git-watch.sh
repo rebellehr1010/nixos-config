@@ -28,11 +28,10 @@ trap 'rmdir "$lock_dir" 2>/dev/null || true' EXIT
 
 export GIT_TERMINAL_PROMPT=0
 
-current_branch="$(git -C "$repo" symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
 upstream_ref="$(git -C "$repo" rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)"
 
-remote_ahead=0
-remote_behind=0
+local_ahead=0
+local_behind=0
 fetch_failed=0
 
 if [[ -n "$upstream_ref" ]]; then
@@ -42,9 +41,10 @@ if [[ -n "$upstream_ref" ]]; then
         fetch_failed=1
     fi
 
-    if read -r remote_behind remote_ahead < <(git -C "$repo" rev-list --left-right --count "HEAD...@{u}" 2>/dev/null); then
-        remote_behind="${remote_behind:-0}"
-        remote_ahead="${remote_ahead:-0}"
+    # HEAD-only commits need pushing; upstream-only commits need pulling.
+    if read -r local_ahead local_behind < <(git -C "$repo" rev-list --left-right --count "HEAD...@{u}" 2>/dev/null); then
+        local_ahead="${local_ahead:-0}"
+        local_behind="${local_behind:-0}"
     fi
 fi
 
@@ -54,7 +54,7 @@ if [[ -n "$status_lines" ]]; then
     local_change_count="$(printf '%s\n' "$status_lines" | sed '/^$/d' | wc -l | tr -d ' ')"
 fi
 
-if (( local_change_count == 0 && remote_ahead == 0 && remote_behind == 0 && fetch_failed == 0 )); then
+if (( local_change_count == 0 && local_ahead == 0 && local_behind == 0 && fetch_failed == 0 )); then
     exit 0
 fi
 
@@ -66,12 +66,12 @@ if (( local_change_count > 0 )); then
     message_lines+=("Local changes need review.")
 fi
 
-if (( remote_behind > 0 )); then
+if (( local_behind > 0 )); then
     message_lines+=("")
     message_lines+=("Remote changes are ready to pull.")
 fi
 
-if (( remote_ahead > 0 )); then
+if (( local_ahead > 0 )); then
     message_lines+=("")
     message_lines+=("Local commits are ready to push.")
 fi

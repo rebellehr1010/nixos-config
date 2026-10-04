@@ -1,5 +1,5 @@
 {
-  description = "Anycubic Slicer Next flake for NixOS";
+  description = "Anycubic Slicer Next for x86_64 Linux with Nix";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -32,6 +32,7 @@
       {
         packages.default = package;
         packages.anycubic-slicer-next = package;
+        checks.default = package;
 
         apps.default = {
           type = "app";

@@ -2,147 +2,160 @@
 set -euo pipefail
 
 usage() {
-    cat <<'EOF'
+    cat <<'HELP'
 Usage: download-criticalrole-episodes.sh [OPTIONS]
 
-Download YouTube episodes listed in a batch file with resume/skip support.
-Already downloaded videos are tracked in an archive file and skipped on reruns.
+Download the Critical Role C1 playlist, skipping its first 24 entries.
+Resume partial downloads and skip successfully archived videos on reruns.
+Save original English subtitles as SRT sidecars and embedded MKV tracks.
 
 Options:
-  --batch-file PATH   File containing one YouTube URL per line
-                      (default: /home/riley/Downloads/remaining-episodes.txt)
-  --output-dir PATH   Download directory
-                      (default: /home/riley/Downloads/CriticalRole)
-  --archive-file PATH yt-dlp archive file used to skip completed videos
-                      (default: <output-dir>/.yt-dlp-download-archive.txt)
+  --playlist-url URL  Override the C1 playlist
+  --playlist-items N  yt-dlp index selection (default: 25:)
+  --batch-file PATH   Use a URL list instead; no index filtering by default
+  --output-dir PATH   Default: /home/riley/Downloads/CriticalRole/C1
+  --archive-file PATH Default: <output-dir>/.yt-dlp-download-archive.txt
+  --cookies-from-browser BROWSER
+                      Authentication source (default: brave)
+  --no-cookies        Try downloading without browser authentication
+  --dry-run           List selected entries without downloading or archiving
   --help              Show this help
 
-Examples:
-  download-criticalrole-episodes.sh
-  download-criticalrole-episodes.sh --batch-file /home/riley/Downloads/episode-list.txt
-EOF
+Temporary network failures use capped exponential backoff. Failed playlist
+passes are retried twice; permanent failures still produce a nonzero exit.
+There is no overall download time limit. Ctrl-C stops the run; rerun to resume.
+
+LosslessCut: keep the subtitle track selected and export as MKV. Extract an
+SRT from the FINAL edited output for YouTube (the original sidecar is uncut):
+  ffmpeg -i edited.mkv -map 0:s:0 -c:s srt edited.en.srt
+Check caption sync at joins and cut boundaries before uploading.
+HELP
 }
 
-batch_file="/home/riley/Downloads/remaining-episodes.txt"
-output_dir="/home/riley/Downloads/CriticalRole"
-archive_file=""
+playlist_url='https://www.youtube.com/playlist?list=PLqTT_VuffgDP0I6accl0jP5p3kxBRPVPa'
+playlist_items='25:'
+items_explicit=false
+batch_file=''
+output_dir='/home/riley/Downloads/CriticalRole/C1'
+archive_file=''
+browser='brave'
+dry_run=false
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --batch-file)
-            [[ $# -ge 2 ]] || { echo "Error: --batch-file requires a path" >&2; exit 2; }
-            batch_file="$2"
+        --playlist-url|--playlist-items|--batch-file|--output-dir|--archive-file|--cookies-from-browser)
+            [[ $# -ge 2 && -n "$2" && "$2" != --* ]] || {
+                echo "Error: $1 requires a value" >&2; exit 2;
+            }
+            case "$1" in
+                --playlist-url) playlist_url="$2" ;;
+                --playlist-items) playlist_items="$2"; items_explicit=true ;;
+                --batch-file) batch_file="$2" ;;
+                --output-dir) output_dir="$2" ;;
+                --archive-file) archive_file="$2" ;;
+                --cookies-from-browser) browser="$2" ;;
+            esac
             shift 2
             ;;
-        --output-dir)
-            [[ $# -ge 2 ]] || { echo "Error: --output-dir requires a path" >&2; exit 2; }
-            output_dir="$2"
-            shift 2
-            ;;
-        --archive-file)
-            [[ $# -ge 2 ]] || { echo "Error: --archive-file requires a path" >&2; exit 2; }
-            archive_file="$2"
-            shift 2
-            ;;
-        -h|--help)
-            usage
-            exit 0
-            ;;
-        *)
-            echo "Error: Unknown argument: $1" >&2
-            usage >&2
-            exit 2
-            ;;
+        --no-cookies) browser=''; shift ;;
+        --dry-run) dry_run=true; shift ;;
+        -h|--help) usage; exit 0 ;;
+        *) echo "Error: Unknown argument: $1" >&2; usage >&2; exit 2 ;;
     esac
 done
 
-if [[ ! -f "$batch_file" ]]; then
-    echo "Error: Batch file not found: $batch_file" >&2
-    exit 1
+for dependency in yt-dlp ffmpeg ffprobe flock; do
+    command -v "$dependency" >/dev/null || {
+        echo "Error: Required command not found: $dependency" >&2; exit 1;
+    }
+done
+
+source_args=()
+if [[ -n "$batch_file" ]]; then
+    [[ -f "$batch_file" ]] || { echo "Error: Batch file not found: $batch_file" >&2; exit 1; }
+    source_args+=(--batch-file "$batch_file")
+    if "$items_explicit"; then source_args+=(--playlist-items "$playlist_items"); fi
+else
+    source_args+=(--playlist-items "$playlist_items" "$playlist_url")
+fi
+
+network_args=(
+    --ignore-config
+    --no-abort-on-error
+    --socket-timeout 60
+    --retries 20
+    --fragment-retries 20
+    --extractor-retries 5
+    --file-access-retries 3
+    --retry-sleep 'http:exp=2:60'
+    --retry-sleep 'fragment:exp=2:60'
+    --retry-sleep 'extractor:exp=2:60'
+    --sleep-requests 1
+    --sleep-interval 3
+    --max-sleep-interval 8
+)
+if [[ -n "$browser" ]]; then network_args+=(--cookies-from-browser "$browser"); fi
+# yt-dlp enables only Deno by default; this NixOS installation has Node.
+if command -v node >/dev/null; then network_args+=(--js-runtimes node); fi
+
+if "$dry_run"; then
+    exec yt-dlp "${network_args[@]}" --flat-playlist --simulate \
+        --print '%(playlist_index)s %(id)s %(title)s' "${source_args[@]}"
 fi
 
 mkdir -p "$output_dir"
+archive_file="${archive_file:-$output_dir/.yt-dlp-download-archive.txt}"
+mkdir -p "$(dirname "$archive_file")"
+# Prevent simultaneous runs from writing the same video/partial/archive files.
+exec 9>"$output_dir/.download.lock"
+flock -n 9 || { echo "Error: Another download is using $output_dir" >&2; exit 1; }
 
-if [[ -z "$archive_file" ]]; then
-    archive_file="$output_dir/.yt-dlp-download-archive.txt"
-fi
-
-echo "Batch file   : $batch_file"
 echo "Output dir   : $output_dir"
 echo "Archive file : $archive_file"
-
 yt_dlp_args=(
-    --ignore-errors
+    "${network_args[@]}"
     --download-archive "$archive_file"
-    --force-write-archive
     --continue
-    --no-overwrites
-    --retries 15
-    --fragment-retries 15
-    --retry-sleep 5
-    --sleep-requests 1
-    --sleep-interval 2
-    --max-sleep-interval 8
-    --cookies-from-browser brave
+    --part
+    --no-force-overwrites
+    --abort-on-unavailable-fragments
+    --concurrent-fragments 1
+    --format 'bv*+ba/b'
+    --format-sort 'res,vcodec:h264,acodec:aac'
+    --merge-output-format mkv
+    --remux-video mkv
+    --write-subs
+    --no-write-auto-subs
+    --sub-langs 'en.*'
+    --sub-format 'srt/vtt/best'
+    --convert-subs srt
+    --embed-subs
+    --embed-metadata
+    --embed-chapters
+    --newline
+    --progress-delta 30
     -P "$output_dir"
+    -o '%(title)s [%(id)s].%(ext)s'
 )
 
-download_one_url() {
-    local url="$1"
-    local attempt rc log_file
-
-    for attempt in 1 2; do
-        echo
-        echo "Downloading: $url (attempt $attempt/2)"
-        log_file="$(mktemp)"
-
-        set +e
-        yt-dlp "${yt_dlp_args[@]}" "$url" 2>&1 | tee "$log_file"
-        rc=${PIPESTATUS[0]}
-        set -e
-
-        if [[ "$rc" -eq 0 ]]; then
-            rm -f "$log_file"
-            return 0
-        fi
-
-        # YouTube bot checks can appear mid-run; retry once so yt-dlp re-reads fresh Brave cookies.
-        if grep -q "Sign in to confirm you.re not a bot" "$log_file" && [[ "$attempt" -lt 2 ]]; then
-            echo "Detected YouTube bot challenge. Retrying with freshly read Brave cookies..."
-            rm -f "$log_file"
-            continue
-        fi
-
-        rm -f "$log_file"
-        return "$rc"
-    done
-}
-
-total=0
-failed=0
-
-while IFS= read -r raw_line || [[ -n "$raw_line" ]]; do
-    line="$(printf '%s' "$raw_line" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')"
-
-    if [[ -z "$line" || "$line" == \#* ]]; then
-        continue
+# Do not use --ignore-errors: postprocessing failures must not look successful.
+# Each new pass re-extracts fresh media URLs; the archive skips completed videos.
+trap 'exit 130' INT
+trap 'exit 143' TERM
+rc=1
+for attempt in 1 2 3; do
+    echo "Download pass $attempt/3"
+    if yt-dlp "${yt_dlp_args[@]}" "${source_args[@]}"; then
+        echo 'All selected, available downloads completed.'
+        exit 0
+    else
+        rc=$?
     fi
-
-    total=$((total + 1))
-    if ! download_one_url "$line"; then
-        failed=$((failed + 1))
+    if [[ "$rc" -eq 130 || "$rc" -eq 143 ]]; then exit "$rc"; fi
+    if [[ "$attempt" -lt 3 ]]; then
+        echo 'Some downloads failed. Retrying unfinished videos in 60 seconds...'
+        sleep 60
     fi
-done < "$batch_file"
-
-echo
-echo "Processed URLs : $total"
-echo "Failed URLs    : $failed"
-
-rc=0
-if [[ "$failed" -ne 0 ]]; then
-    rc=1
-    echo "Some downloads failed this run (often temporary/rate-limit related)."
-    echo "Re-run this script; completed episodes in the archive file will be skipped."
-fi
-
-test "$rc" -eq 0
+done
+echo 'Some downloads failed. Rerun this script to resume; completed videos will be skipped.' >&2
+exit "$rc"

@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ inputs, ... }:
+{ config, pkgs, ... }:
 {
   # imports = [# Include the results of the hardware scan.];
   nix = {
@@ -28,7 +28,16 @@
     stateVersion = "25.05"; # Did you read the comment?
     autoUpgrade = {
       enable = true;
-      flake = inputs.self.outPath;
+      flake = "/etc/nixos#${config.networking.hostName}";
+      # Flake inputs are refreshed explicitly below, rather than via channels.
+      upgrade = false;
     };
   };
+
+  # Keep Nixpkgs and Home Manager in step, and leave lockfile changes available
+  # for review/commit. Run as the repository owner so the lock stays editable.
+  systemd.services.nixos-upgrade.preStart = ''
+    ${pkgs.util-linux}/bin/runuser -u riley -- \
+      ${config.nix.package}/bin/nix flake update nixpkgs home-manager --flake /etc/nixos
+  '';
 }

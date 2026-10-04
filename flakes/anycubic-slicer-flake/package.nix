@@ -1,30 +1,52 @@
 {
   lib,
-  appimageTools,
-  coreutils,
+  stdenvNoCC,
+  buildFHSEnv,
+  dpkg,
   fetchurl,
-  runtimeShell,
+  writeShellScript,
 }:
 
 let
   pname = "anycubic-slicer-next";
-  version = "1.3.9.4";
+  version = "2.0.06";
 
+  # Version from the vendor's Debian index. Its filename uses a different version.
   src = fetchurl {
-    url = "https://github.com/thecalamityjoe87/anycubic-slicer-next-packages/releases/download/v${version}/AnycubicSlicer-${version}-x86_64.AppImage";
-    hash = "sha256-4foQjgwnmx4S5LjfTulAb5jc3EqkBN/20/MrUtzZoHg=";
+    url = "https://cdn-universe-slicer.anycubic.com/prod/pool/main/a/anycubicslicernext/AnycubicSlicerNext_linux-v2.0.0.5-20260913065625.deb";
+    hash = "sha256-/gh6VgFO0lzf5MPCk7UXra7gqbLh3tefXjlLeWiBfBU=";
   };
 
-  appimageContents = appimageTools.extractType2 {
-    inherit pname version src;
+  payload = stdenvNoCC.mkDerivation {
+    pname = "${pname}-payload";
+    inherit version src;
+    nativeBuildInputs = [ dpkg ];
+    unpackPhase = ''
+      runHook preUnpack
+      dpkg-deb -x "$src" source
+      runHook postUnpack
+    '';
+    dontBuild = true;
+    # The unmodified binaries run inside the FHS environment below.
+    dontFixup = true;
+    installPhase = ''
+      runHook preInstall
+      mkdir -p "$out/lib" "$out/share/licenses/${pname}"
+      cp -r source/usr/bin source/usr/share "$out/"
+      cp -P source/usr/lib/*.so* "$out/lib/"
+      cp source/usr/LICENSE.txt "$out/share/licenses/${pname}/LICENSE.txt"
+      runHook postInstall
+    '';
   };
-
 in
-appimageTools.wrapType2 {
-  inherit pname version src;
+buildFHSEnv {
+  inherit pname version;
 
-  extraPkgs =
+  # The binary hardcodes /usr/share/AnycubicSlicerNext/resources and loads vendor
+  # libraries from /usr/lib. buildFHSEnv supplies both without changing the host.
+  targetPkgs =
     pkgs: with pkgs; [
+      payload
       stdenv.cc.cc.lib
       cairo
       dbus
@@ -34,45 +56,67 @@ appimageTools.wrapType2 {
       glib
       gst_all_1.gstreamer
       gst_all_1.gst-plugins-base
+      gst_all_1.gst-plugins-good
+      gst_all_1.gst-plugins-bad
+      gst_all_1.gst-plugins-ugly
+      gst_all_1.gst-libav
       gtk3
-      mesa
       libglvnd
+      libpsl
       libsoup_3
+      libtiff
       libx11
+      mesa
       pango
-      wayland
       webkitgtk_4_1
       zlib
     ];
 
-  extraInstallCommands = ''
-        mv $out/bin/${pname} $out/bin/.${pname}-wrapped
-        cat > $out/bin/${pname} <<'EOF'
-    #!${runtimeShell}
-    script_path="$(${lib.getExe' coreutils "readlink"} -f "$0")"
-    script_dir=''${script_path%/*}
-    if [ -n "''${HOME:-}" ] && [ -d "''${HOME}" ]; then
-      cd "''${HOME}"
+  # Use this runtime's plugins even when the host exports its own plugin path.
+  profile = ''
+    export GST_PLUGIN_SYSTEM_PATH_1_0=/usr/lib/gstreamer-1.0
+  '';
+
+  # /etc/nixos, for example, is not visible inside the FHS environment. Avoid
+  # failing before the launcher can choose an accessible working directory.
+  chdirToPwd = false;
+  extraPreBwrapCmds = ''
+    export ANYCUBIC_SLICER_CWD="$PWD"
+  '';
+  runScript = writeShellScript "${pname}-launch" ''
+    # Upstream creates its settings directory without creating this parent.
+    if [ -n "''${HOME:-}" ] && [ -d "$HOME" ]; then
+      mkdir -p "$HOME/.config"
+    fi
+    if [ -d "$ANYCUBIC_SLICER_CWD" ]; then
+      cd "$ANYCUBIC_SLICER_CWD"
+    elif [ -n "''${HOME:-}" ] && [ -d "$HOME" ]; then
+      cd "$HOME"
     else
       cd /tmp
     fi
-    exec "$script_dir/.${pname}-wrapped" "$@"
-    EOF
-        chmod 755 $out/bin/${pname}
-
-        install -Dm444 ${appimageContents}/AnycubicSlicer.desktop \
-          $out/share/applications/AnycubicSlicer.desktop
-        install -Dm444 ${appimageContents}/share/icons/hicolor/256x256/apps/AnycubicSlicer.png \
-          $out/share/icons/hicolor/256x256/apps/AnycubicSlicer.png
-        install -Dm444 ${appimageContents}/AnycubicSlicer.svg \
-          $out/share/icons/hicolor/scalable/apps/AnycubicSlicer.svg
-
-        ln -s $out/bin/${pname} $out/bin/AnycubicSlicerNext
+    unset ANYCUBIC_SLICER_CWD
+    exec /usr/bin/AnycubicSlicerNext "$@"
   '';
 
+  extraInstallCommands = ''
+    ln -s "$out/bin/${pname}" "$out/bin/AnycubicSlicerNext"
+    install -Dm444 ${payload}/share/applications/AnycubicSlicer.desktop \
+      "$out/share/applications/AnycubicSlicer.desktop"
+    substituteInPlace "$out/share/applications/AnycubicSlicer.desktop" \
+      --replace-fail 'Exec=AnycubicSlicerNext %U' "Exec=$out/bin/AnycubicSlicerNext %U" \
+      --replace-fail 'Icon=/usr/share/AnycubicSlicerNext/resources/images/AnycubicSlicer.png' 'Icon=AnycubicSlicer'
+    install -Dm444 ${payload}/share/AnycubicSlicerNext/resources/images/AnycubicSlicer.png \
+      "$out/share/pixmaps/AnycubicSlicer.png"
+    install -Dm444 ${payload}/share/AnycubicSlicerNext/resources/images/AnycubicSlicer.svg \
+      "$out/share/icons/hicolor/scalable/apps/AnycubicSlicer.svg"
+  '';
+
+  passthru = { inherit src payload; };
+
   meta = {
-    description = "Anycubic Slicer Next packaged from the community AppImage release";
-    homepage = "https://github.com/thecalamityjoe87/anycubic-slicer-next-packages";
+    description = "Anycubic Slicer Next packaged from the official Debian release";
+    homepage = "https://github.com/ANYCUBIC-3D/AnycubicSlicerNext";
     mainProgram = "AnycubicSlicerNext";
     platforms = [ "x86_64-linux" ];
     sourceProvenance = with lib.sourceTypes; [ binaryNativeCode ];

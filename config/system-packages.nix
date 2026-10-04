@@ -17,6 +17,7 @@
     ];
     systemPackages = with pkgs; [
       inputs.nix-software-center.packages."${pkgs.stdenv.hostPlatform.system}".nix-software-center
+      bind.dnsutils # nslookup, dig, and host
       dnsmasq
       gnome-boxes
       openssl

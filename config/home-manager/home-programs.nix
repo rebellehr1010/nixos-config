@@ -66,8 +66,6 @@
       zip
       # zoom
       zoxide
-      zplug
-      zsh
     ];
   };
 
@@ -98,7 +96,7 @@
     zsh = {
       enable = true;
       enableCompletion = true;
-      autosuggestion.enable = true; # Still provide autosuggestion via HM; zplug will also fetch its version.
+      autosuggestion.enable = true;
 
       # We'll rely on zplug for syntax highlighting, so disable HM's built-in to avoid duplication.
       syntaxHighlighting.enable = false;
@@ -106,7 +104,6 @@
       zplug = {
         enable = true;
         plugins = [
-          { name = "zsh-users/zsh-autosuggestions"; }
           { name = "zsh-users/zsh-completions"; }
           { name = "zsh-users/zsh-syntax-highlighting"; }
           { name = "zsh-users/zsh-history-substring-search"; }
@@ -127,8 +124,6 @@
         zplugHome = "/home/riley/.zplug";
       };
       initContent = ''
-        source ${pkgs.zplug}/share/zplug/init.zsh
-
         # Map terminal Ctrl+Arrow escape sequences to word movement in zsh.
         bindkey -M emacs "^[[1;5D" backward-word
         bindkey -M emacs "^[[1;5C" forward-word
@@ -146,14 +141,6 @@
         bindkey -M viins "^[[5C" forward-word
         bindkey -M viins "^[[7;5~" beginning-of-line
         bindkey -M viins "^[[8;5~" end-of-line
-
-        # Install any missing plugins quietly on first run
-        if ! zplug check --verbose; then
-          printf '\n[zplug] Installing missing plugins...\n' >&2
-          zplug install
-        fi
-
-        zplug load
 
         # Powerlevel10k instant prompt (optional, improves startup)
         if [[ -r "/etc/nixos/config/zsh/.p10k.zsh" ]]; then

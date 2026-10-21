@@ -18,6 +18,31 @@
 
   nixpkgs.config.allowUnfree = true;
 
+  # Temporary workarounds for Calibre's speech dependencies.
+  nixpkgs.overlays = [
+    (final: prev: {
+      # Calibre uses Python 3.14; speechd needs the interpreter at configure time
+      # under strictDeps, otherwise it silently omits its Python bindings.
+      calibre = prev.calibre.override {
+        speechd-minimal = prev.speechd-minimal.overrideAttrs (oldAttrs: {
+          nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ final.python314 ];
+          configureFlags = oldAttrs.configureFlags ++ [ "--enable-python" ];
+        });
+      };
+      # Accept both Cython error wordings while retaining the regression checks.
+      pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
+        (pythonFinal: pythonPrev: {
+          pyopenjtalk-plus = pythonPrev.pyopenjtalk-plus.overridePythonAttrs (oldAttrs: {
+            postPatch = (oldAttrs.postPatch or "") + ''
+              substituteInPlace tests/test_frontend.py \
+                --replace-fail 'match="must be str"' 'match="must be str|Expected str, got int"'
+            '';
+          });
+        })
+      ];
+    })
+  ];
+
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
   # on your system were taken. It‘s perfectly fine and recommended to leave

@@ -8,7 +8,8 @@
   nix = {
     optimise.automatic = true;
     settings = {
-      auto-optimise-store = true; # Potentially slows down builds.
+      # Deduplicate with the scheduled optimise job, outside the rebuild path.
+      auto-optimise-store = false;
       experimental-features = [
         "nix-command"
         "flakes"

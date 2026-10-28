@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Compare warm-store frontend overhead, not cold update/download performance.
+# Usage: benchmark-nixos-build [flake-directory] [host]
+set -euo pipefail
+
+repo=$(realpath "${1:-/etc/nixos}")
+host=${2:-$(hostname)}
+target="$repo#nixosConfigurations.$host.config.system.build.toplevel"
+fast_build=${NIX_FAST_BUILD_BIN:-nix-fast-build}
+command -v "$fast_build" >/dev/null
+logs=$(mktemp -d "${TMPDIR:-/tmp}/nixos-build-benchmark.XXXXXXXX")
+lock_before=$(sha256sum "$repo/flake.lock")
+printf 'Warm-store benchmark; no activation. Logs: %s\n' "$logs"
+git -C "$repo" rev-parse HEAD > "$logs/revision.txt"
+git -C "$repo" diff HEAD > "$logs/config.patch"
+cp "$repo/flake.lock" "$logs/flake.lock"
+nix config show > "$logs/nix-settings.txt"
+
+regular() {
+  nix build "$target" --no-link
+}
+fast() {
+  "$fast_build" --flake "$target" --eval-workers 1 --no-nom
+}
+
+# Ensure both tools have seen the same configuration before timing. This may
+# build/download missing packages; warmup time is deliberately not compared.
+printf 'Warming both frontends (may build missing packages)...\n'
+regular > "$logs/warmup-regular.log" 2>&1
+fast > "$logs/warmup-fast.log" 2>&1
+printf 'tool\tseconds\n' > "$logs/timings.tsv"
+round=0
+for tool in regular fast fast regular regular fast; do
+  round=$((round + 1))
+  TIMEFORMAT='%3R'
+  { time "$tool" > "$logs/$round-$tool.log" 2>&1; } 2> "$logs/$round.time"
+  printf '%s\t%s\n' "$tool" "$(cat "$logs/$round.time")" | tee -a "$logs/timings.tsv"
+done
+if [[ $(sha256sum "$repo/flake.lock") != "$lock_before" ]]; then
+  printf 'Lockfile changed during benchmark; discard these timings.\n' >&2
+  exit 1
+fi
+printf 'These timings measure warm-store overhead only. Keep configuration unchanged during the test.\n'

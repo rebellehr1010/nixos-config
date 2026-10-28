@@ -26,6 +26,8 @@
       lsta = "start_logging.sh";
       lsto = "tmux kill-session -t logging";
       nrs = "cd /etc/nixos && sudo nixos-rebuild switch --flake /etc/nixos"; # Use flake with auto host selection
+      # Keep nixos-rebuild responsible for profiles, bootloader and activation.
+      nfrs = "nfb && sudo nixos-rebuild switch --flake /etc/nixos";
       nfu = "cd /etc/nixos && nix flake update";
       prettier = "prettier.sh";
       remove-gcc = "remove_gcc.sh";

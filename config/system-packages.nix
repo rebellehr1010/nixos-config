@@ -1,4 +1,5 @@
 {
+  config,
   pkgs,
   inputs,
   lib,
@@ -22,6 +23,25 @@
       gnome-boxes
       openssl
       phodav
+      nix-fast-build
+      (pkgs.writeShellApplication {
+        name = "nfb";
+        runtimeInputs = [
+          pkgs.nix-fast-build
+          pkgs.coreutils
+        ];
+        text = ''
+          # Build this host only, using the repository's locked inputs. Keep
+          # the result rooted until a later switch (or the next build).
+          result_dir="''${XDG_CACHE_HOME:-$HOME/.cache}/nixos-fast-build/${config.networking.hostName}"
+          mkdir -p "$result_dir"
+          exec nix-fast-build \
+            --flake '/etc/nixos#nixosConfigurations.${config.networking.hostName}.config.system.build.toplevel' \
+            --eval-workers 1 \
+            --out-link "$result_dir/result" \
+            "$@"
+        '';
+      })
     ];
     variables.EDITOR = "micro";
   };

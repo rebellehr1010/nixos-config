@@ -3,6 +3,8 @@
 Installed on 28 October 2026 against TrueNAS 25.10.7. The executable source is
 [hdd-startup.py](hdd-startup.py); its safety tests are
 [test_hdd_startup.py](test_hdd_startup.py). These files contain no credentials.
+The persistent tasks and healthy-pool checks were verified after updating to
+TrueNAS 25.10.8 on 12 November 2026.
 
 ## Diagnosis
 
@@ -143,6 +145,173 @@ Detection normally takes up to one minute plus disk spin-up/recovery time.
 The monitor cannot restore power to an enclosure, repair failed hardware, or
 guarantee applications retry I/O errors they received during an outage. The
 existing pool `failmode=continue` setting was left unchanged.
+
+## 25.10.8 update and app upgrades on 12 November 2026
+
+The user authorized updating TrueNAS and then its three catalog apps. The
+pre-update check found HDDs, app_pool, and boot-pool ONLINE; the recovery
+scripts matched this checkout and all three scheduled tasks remained enabled.
+Source comparison between 25.10.7 and 25.10.8 found no changes to the native
+pool-import routine, startup-task handling, or cron code used by the fix.
+
+Before installation, `config.save` produced a configuration archive including
+the secret seed and root authorized keys. Its SQLite integrity check passed.
+The protected server backup is
+`/mnt/app_pool/admin/hdd-startup/backup-20261112-1030-pre-25.10.8/`.
+An identical private copy is on the workstation at
+`/home/riley/.config/truenas-control/backups/truenas-25.10.7-before-25.10.8-20261112.tar`.
+These files contain secrets and must stay private. The server backup also
+contains app configuration, task records, the recovery scripts, and container
+states. Boot environment `25.10.7` was marked `keep=true`.
+
+Recursive snapshots named `pre-truenas-25.10.8-20261112` were created for
+`app_pool/apps`, `app_pool/ix-apps/app_mounts`, and
+`app_pool/ix-apps/app_configs`. These are local recovery points, not independent
+backups of all application data.
+
+The supported `update.run` job 64149 completed successfully and selected
+25.10.8 for the next boot. A clean reboot was requested at 10:35:20 AWST.
+By 10:45 the server had not returned over SSH or ping, including over the
+workstation's Wi-Fi path. A wake packet at 10:41:01 did not restore access,
+and LAN discovery did not locate the server's MAC at another address. The
+enclosure stayed powered on. The user found the server powered on with no
+display, briefly pressed its power button to shut it down, and started it
+again. The new boot began at 11:06:04 and ran TrueNAS 25.10.8 with kernel
+6.12.113. The retained environment's journal reached the reboot target at
+10:35:36; it does not establish where the first restart stalled. Its final
+entries are saved as `previous-shutdown-journal.txt` in the backup directory.
+
+HDDs imported automatically. At 11:06:55 the unchanged startup script
+confirmed the pool was already healthy, and the runtime monitor armed at
+11:07:05. All eight members had zero reported read/write/checksum errors;
+pool ID 18 was unchanged. All pools were healthy, the media dataset mounted,
+NFS/SMB were active, workstation NFS access passed, and startup task 1,
+wake task 3, and cron task 187 remained enabled. `Wake-on: g` also persisted.
+This was a boot with the enclosure powered; a cold enclosure test on the
+new kernel has not been performed.
+
+After these checks, catalog sync and the supported `app.upgrade` calls
+completed successfully, with `snapshot_hostpaths=true` for each app:
+
+| App | Previous software/catalog version | Updated software/catalog version | Job |
+| --- | --- | --- | --- |
+| Portainer | 2.45.2 / 1.7.14 | 2.45.3 / 1.7.21 | 116 |
+| HexOS | 1.4.3 / 1.4.4 | 1.4.8 / 1.4.8 | 127 |
+| Tailscale | 1.102.5 / 1.4.17 | 1.104.4 / 1.4.26 | 138 |
+
+All three apps reported RUNNING with no remaining catalog or image updates.
+Portainer's HTTP/HTTPS status APIs returned 2.45.3, Tailscale reported a
+running backend and online identity, and all three containers had zero
+restarts. Host-path snapshots and HexOS ix-volume rollback snapshots were
+verified. All 19 containers that were running before the update were still
+running afterward. `gluetun` was unhealthy before the update and remained so;
+no unrelated VPN configuration was changed. Before/after app configuration,
+container states, and verification results are stored in the private backup
+directory. The previous boot environment and recovery snapshots were retained.
+
+## Portainer migration and homepage on 12 November 2026
+
+After the OS/app upgrades, Tailscale and HexOS moved to Portainer-managed
+Compose stacks in environment `local` (endpoint 3):
+
+| Service | Portainer stack | Container | Update image |
+| --- | --- | --- | --- |
+| Tailscale | `tailscale` (8) | `tailscale-tailscale-1` | `ghcr.io/tailscale/tailscale:stable` |
+| HexOS | `ix-hexos` (9) | `ix-hexos-hexos-1` | `eshtek/hexos:latest` |
+
+Their native TrueNAS registrations were removed with image and ix-volume
+deletion disabled. Only Portainer remains in the TrueNAS Apps list. Do not
+install a second Tailscale or HexOS instance alongside these stacks. Both
+containers use `restart: unless-stopped`; stack definitions and data live on
+`app_pool`, not the TrueNAS boot filesystem.
+
+Tailscale retains `/mnt/app_pool/apps/appdata/tailscale`, the same device
+identity, address `100.86.58.121`, and advertised route `192.168.1.0/24`.
+Its old enrollment key was omitted from the new configuration; authenticated
+state persists in that directory with `TS_AUTH_ONCE=true`. The image uses the
+[recommended stable tag](https://tailscale.com/docs/features/client/update).
+The migrated client remained at 1.104.4 and passed health and workstation
+Tailscale ping checks.
+
+HexOS was stopped before copying `hexos_data` and `netbird_state` into
+`/mnt/app_pool/apps/appdata/hexos/`, preserving permissions and checking file
+checksums. SQLite `quick_check` passed. Its TrueNAS API credentials, host
+identity, network settings, pool mounts, and Docker access were retained.
+The `ix-hexos` project and `hexos` service names are deliberately preserved:
+the installed agent's filesystem guard looks up these exact Compose labels.
+Logs confirmed reconnection to both TrueNAS and the HexOS cloud, and its
+local HTTP interface on port 43706 returned 200. The privileged
+`hexos-host-exec` helper remains under HexOS's control. This verifies the
+installed version's connections, not every HexOS operation or compatibility
+with future releases. Catalog configuration changes are no longer applied
+automatically to these two Portainer stacks.
+
+Watchtower had been stopped since 6 September with no restart policy. Its
+service in `server-stack` (2) now uses `nickfedor/watchtower:latest`, version
+1.24.0 at deployment, and `restart: unless-stopped`. The original
+[containrrr project is archived](https://github.com/containrrr/watchtower);
+the [maintained fork](https://github.com/nicholas-fedor/watchtower) negotiated
+Docker API 1.51 successfully. Updates are scheduled for **04:00 Australia/Perth
+daily** (`0 0 4 * * *`), first scheduled for 13 November.
+
+Selection permits the `server-stack` project or an explicit
+`com.centurylinklabs.watchtower.enable=true` label, which both migrated apps
+have. Existing `enable=false` exclusions for Pi-hole, Traefik, and the
+homepage remain effective. Portainer and `hexos-host-exec` are also explicitly
+excluded. Stopped containers are neither checked nor revived; restarting
+containers are included. The stop timeout is 60 seconds. Old images and
+volumes are not automatically deleted, and no notification destination is
+configured. See the fork's
+[container selection rules](https://watchtower.nickfedor.com/v1.24.0/getting-started/container-selection/).
+Future services outside `server-stack` need an explicit enable label to opt in.
+
+A monitor-only selection check scanned the intended 14 running apps with
+zero failures; Watchtower itself subsequently became the fifteenth eligible
+container. A separate registry check scanned Tailscale and HexOS with zero
+failures or updates. No newer image was available for those two, so an actual
+Watchtower replacement was not exercised. The scheduled Watchtower container
+is healthy and logged the correct next run time.
+
+Redeploying `server-stack` restarted several media containers with the same
+images and environment settings. Homarr's active `/appdata` database was in
+an anonymous Docker volume despite its older host-path mappings. The
+redeploy allocated a fresh volume; the original was retained and reattached.
+The stack now explicitly references that original volume as external
+`homarr_appdata`; FlareSolverr's original `/config` volume is similarly
+declared as `flaresolverr_config`. Both identities were verified after
+recreation, and private copies were archived. All 20 containers run;
+Gluetun's pre-existing unhealthy status remains. Jellyfin and Homarr HTTP
+checks returned 200.
+
+The `https` stack (7) stores the homepage as inline Compose configuration
+`homepage_html`. All 14 links now specify `target="_blank"` and
+`rel="noopener noreferrer"`; destinations and styling are unchanged.
+The change was saved through Portainer, the homepage container was
+recreated to apply the embedded configuration, and the public HTTPS page
+was checked. Edit this stack configuration for future changes rather than
+editing the container's generated HTML.
+
+Private migration records are under
+`/mnt/app_pool/admin/portainer-migration-20261112/` (root-only). They include
+original app settings, before/final Compose files, inspections, verification
+logs, Tailscale state, and copies of the original Homarr/FlareSolverr volumes.
+Snapshots `app_pool/apps@pre-portainer-migration-20261112` and recursive
+`app_pool/ix-apps/app_mounts/hexos@pre-portainer-migration-20261112` were taken.
+The original HexOS ix-volumes remain intact. An archive also includes the
+quiescent original HexOS data and is copied privately to the workstation's
+`~/.config/truenas-control/backups/portainer-migration-20261112.tar.gz`.
+These archives contain credentials; keep them outside version control.
+
+For rollback, stop Watchtower first and stop the affected Portainer stack
+before starting any replacement. Reinstall a native app using its saved
+configuration and the current persistent data, or redeploy the saved
+Portainer configuration with a known-good image. HexOS's native catalog app
+was `ix-app`, not a catalog entry named `hexos`; its original creation
+payload is saved privately. Remove the Portainer stack without deleting
+volumes before reusing its project name. Never run two instances against
+the same state. Old snapshots/data copies are fallback points and may lack
+subsequent changes; do not roll back the whole `app_pool/apps` dataset merely
+to restore one application.
 
 ## Verification and operation
 

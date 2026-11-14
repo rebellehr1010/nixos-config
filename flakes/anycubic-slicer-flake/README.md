@@ -10,6 +10,13 @@ its installer scripts. A `buildFHSEnv` wrapper provides the `/usr` resource path
 and shared libraries the application expects, plus its GStreamer plugins.
 Nothing is installed into the host's `/usr`.
 
+The executable is copied into the FHS `/usr/bin` rather than symlinked there:
+the slicer scans above its resolved executable path, which otherwise makes it
+enumerate the entire Nix store on startup. The launcher also defaults
+`WEBKIT_DISABLE_COMPOSITING_MODE=1` to avoid a blank Login window with WebKitGTK
+2.54. This uses software compositing for embedded web pages; the 3D viewport
+still uses OpenGL. Set the variable to `0` when testing a future WebKit fix.
+
 The [Debian repack investigation](https://github.com/betoldster/anycubicslicernext-deb-repack)
 helped identify the runtime requirements. Its Debian dependency metadata fixes
 aren't needed here because Nix supplies the dependencies directly.
@@ -22,7 +29,15 @@ and STL import/export. With an isolated home directory and Xvfb, the main window
 and setup wizard rendered and the process stayed running for 60 seconds. The
 launcher also handles a fresh home without an existing `.config` directory.
 
-Printer-specific slicing/G-code, hardware-accelerated 3D rendering, cloud login,
+On 2026-11-14, reproduced the blank Login window with a fresh profile under
+Xvfb and WebKitGTK 2.54.2. The OAuth page loaded but remained blank; enabling
+`WEBKIT_DISABLE_COMPOSITING_MODE=1` rendered the Anycubic User Center sign-in
+form. The user also confirmed the form appears in the normal GNOME Wayland
+session after activation. No credentials were submitted by the diagnostic
+tests. A startup trace also identified the unnecessary Nix-store scan
+described above.
+
+Printer-specific slicing/G-code, hardware-accelerated 3D rendering, completed cloud login,
 printer discovery, camera playback, and non-NixOS hosts still need manual testing.
 
 ## Build and run locally

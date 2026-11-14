@@ -72,9 +72,19 @@ buildFHSEnv {
       zlib
     ];
 
+  # The application scans two directories above its resolved executable path.
+  # A symlink into ${payload}/bin makes that scan enumerate the entire Nix
+  # store. A real file in the FHS /usr/bin keeps the vendor's expected layout.
+  extraBuildCommands = ''
+    cp --remove-destination ${payload}/bin/AnycubicSlicerNext "$out/usr/bin/AnycubicSlicerNext"
+  '';
+
   # Use this runtime's plugins even when the host exports its own plugin path.
   profile = ''
     export GST_PLUGIN_SYSTEM_PATH_1_0=/usr/lib/gstreamer-1.0
+    # wxWebView's accelerated login window is blank with WebKitGTK 2.54.
+    # This affects embedded web pages, not the slicer's OpenGL 3D viewport.
+    export WEBKIT_DISABLE_COMPOSITING_MODE="''${WEBKIT_DISABLE_COMPOSITING_MODE:-1}"
   '';
 
   # /etc/nixos, for example, is not visible inside the FHS environment. Avoid

@@ -28,7 +28,7 @@
       };
       "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1" = {
         binding = "<Super>e";
-        command = "nautilus";
+        command = "nautilus --new-window";
         name = "Files";
       };
       "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2" = {

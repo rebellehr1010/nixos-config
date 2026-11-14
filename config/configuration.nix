@@ -54,7 +54,9 @@
     stateVersion = "25.05"; # Did you read the comment?
     autoUpgrade = {
       enable = true;
-      flake = "/etc/nixos#${config.networking.hostName}";
+      # Root rebuilds a checkout owned by riley; a path input avoids Git's
+      # ownership check without globally trusting user-owned repositories.
+      flake = "path:/etc/nixos#${config.networking.hostName}";
       # Flake inputs are refreshed explicitly below, rather than via channels.
       upgrade = false;
     };

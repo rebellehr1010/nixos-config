@@ -23,6 +23,7 @@
       gnome-boxes
       openssl
       phodav
+      sysstat
       nix-fast-build
       (pkgs.writeShellApplication {
         name = "nfb";

@@ -5,6 +5,10 @@
   dconf = {
     enable = true;
     settings = {
+      "org/gnome/desktop/interface" = {
+        # Keep the Activities overview from opening when the pointer touches a corner.
+        enable-hot-corners = false;
+      };
       "org/gnome/desktop/wm/keybindings" = {
         switch-to-workspace-up = [ ];
         switch-to-workspace-down = [ ];

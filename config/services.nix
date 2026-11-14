@@ -46,6 +46,11 @@
       };
     };
     rpcbind.enable = true; # Enable rpcbind for NFS support.
+    # Keep enough resolution to investigate short freezes after they end.
+    sysstat = {
+      enable = true;
+      collect-frequency = "*:*:0/10";
+    };
     tailscale.enable = true; # Enable Tailscale VPN.
     xserver = {
       enable = true; # Enable the X11 windowing system.
@@ -56,4 +61,10 @@
       };
     };
   };
+
+  systemd.timers.sysstat-collect.timerConfig.AccuracySec = "1s";
+  environment.etc."sysconfig/sysstat".text = ''
+    HISTORY=7
+    SADC_OPTIONS="-S DISK"
+  '';
 }

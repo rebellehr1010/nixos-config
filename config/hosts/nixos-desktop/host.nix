@@ -2,6 +2,16 @@
 {
   networking.hostName = "nixos-desktop"; # Desktop hostname
 
+  # Disk fallback after the shared zram swap fills; no repartitioning needed.
+  # Sized for memory pressure, not for hibernating this 32 GB desktop.
+  swapDevices = [
+    {
+      device = "/var/lib/swapfile";
+      size = 8 * 1024; # MiB
+      priority = 10;
+    }
+  ];
+
   # Retain scheduled maintenance without running missed jobs during login.
   # This desktop is normally on overnight; laptops keep their catch-up policy.
   nix.optimise.persistent = false;

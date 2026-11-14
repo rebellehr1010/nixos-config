@@ -9,12 +9,12 @@
 
 let
   pname = "anycubic-slicer-next";
-  version = "2.0.06";
+  version = "2.0.0.6";
 
-  # Version from the vendor's Debian index. Its filename uses a different version.
+  # Pin the official Linux release and checksum from the vendor's Debian index.
   src = fetchurl {
-    url = "https://cdn-universe-slicer.anycubic.com/prod/pool/main/a/anycubicslicernext/AnycubicSlicerNext_linux-v2.0.0.5-20260913065625.deb";
-    hash = "sha256-/gh6VgFO0lzf5MPCk7UXra7gqbLh3tefXjlLeWiBfBU=";
+    url = "https://cdn-universe-slicer.anycubic.com/prod/pool/main/a/anycubicslicernext/AnycubicSlicerNext_linux-v2.0.0.6-20261030105113.deb";
+    hash = "sha256-/bE0pOEfrX55XI1CVSDOEwUyHMwL8TdaZRoVE/iFRng=";
   };
 
   payload = stdenvNoCC.mkDerivation {

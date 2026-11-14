@@ -1,4 +1,20 @@
 { pkgs, ... }:
+let
+  # The current nixpkgs pin has v56; v57 adds GNOME 51 support.
+  # Use nixpkgs directly once its packaged version catches up.
+  multiMonitorBar =
+    if pkgs.lib.versionAtLeast pkgs.gnomeExtensions.multi-monitor-bar.version "57" then
+      pkgs.gnomeExtensions.multi-monitor-bar
+    else
+      pkgs.gnomeExtensions.multi-monitor-bar.overrideAttrs {
+        version = "57";
+        src = pkgs.fetchzip {
+          url = "https://extensions.gnome.org/extension-data/multi-monitors-barfrederykabryan.v57.shell-extension.zip";
+          hash = "sha256-Wd8plylWoLrGvkUFbQ2ZjqwyOzpfYAtBA5MPT0R8VdY=";
+          stripRoot = false;
+        };
+      };
+in
 {
   home = {
     packages = with pkgs; [
@@ -83,6 +99,7 @@
       enable = true;
       extensions = [
         { package = pkgs.gnomeExtensions.dash-to-dock; }
+        { package = multiMonitorBar; }
       ];
     };
     home-manager.enable = true;

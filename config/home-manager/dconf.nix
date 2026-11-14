@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ ... }:
 {
   # Use `dconf-editor` to find these settings
   # Use `dconf watch /` to see changes live
@@ -38,10 +38,19 @@
       };
       "org/gnome/shell" = {
         disable-user-extensions = false;
-        enabled-extensions = with pkgs.gnomeExtensions; [
-          "dash-to-dock@micxgx.gmail.com"
-        ];
+        # Enabled extensions are declared in programs.gnome-shell.extensions.
         favorite-apps = [ ];
+      };
+      "org/gnome/shell/extensions/multi-monitors-bar" = {
+        show-panel = true;
+        show-date-time = true;
+        show-app-indicators = true;
+        show-indicator = false;
+        # Repeat the top bar while retaining the existing workspace and dock setup.
+        force-workspaces-on-all-displays = false;
+        show-overview-on-extended-monitors = false;
+        thumbnails-slider-position = "none";
+        show-dock-on-extended-monitors = false;
       };
       "org/gnome/shell/extensions/dash-to-dock" = {
         multi-monitor = true;

@@ -1,9 +1,9 @@
 # Anycubic Slicer Next Flake
 
-Packages Anycubic's official **2.0.06** Debian release for **x86_64 Linux**.
-The vendor names this archive `AnycubicSlicerNext_linux-v2.0.0.5-20260913065625.deb`;
-`2.0.06` is its version in both the Debian package and package index. The
-executable reports `AnycubicSlicerNext-2.0.0.5` in its help output.
+Packages Anycubic's official **2.0.0.6** Debian release for **x86_64 Linux**.
+The archive is `AnycubicSlicerNext_linux-v2.0.0.6-20261030105113.deb`, listed
+as `1:2.0.0.6` in the vendor's Debian index. The executable reports
+`AnycubicSlicerNext-2.0.0.6` in its help output.
 
 The download is pinned by URL and SHA-256. Nix extracts the package without running
 its installer scripts. A `buildFHSEnv` wrapper provides the `/usr` resource paths
@@ -37,8 +37,17 @@ session after activation. No credentials were submitted by the diagnostic
 tests. A startup trace also identified the unnecessary Nix-store scan
 described above.
 
-Printer-specific slicing/G-code, hardware-accelerated 3D rendering, completed cloud login,
-printer discovery, camera playback, and non-NixOS hosts still need manual testing.
+Also on 2026-11-14, the previous 2.0.0.5 executable reproduced a Remote Print
+dialog stuck on loading placeholders before showing printers. This is a native
+dialog, separate from the embedded Login page. Updating to 2.0.0.6 with the same
+profile and `magnet-dispenser.3mf` project allowed slicing and loaded the Kobra S1,
+filament slots, print options, and enabled Start Print button. The user confirmed
+the dialog responds. This comparison establishes that the update resolves the
+observed stall; it does not identify the exact upstream defect. Settings and the
+project were backed up before the upgrade. No physical print was started by the
+diagnostic tests.
+
+Completed print jobs, camera playback, and non-NixOS hosts still need manual testing.
 
 ## Build and run locally
 
@@ -73,7 +82,7 @@ nix profile install github:OWNER/REPO#anycubic-slicer-next
 
 `nix profile install` also works as the older spelling of `nix profile add` on
 recent Nix. For reproducible deployment, use a release tag or commit in the URL,
-for example `github:OWNER/REPO/v2.0.06#anycubic-slicer-next` after creating that tag.
+for example `github:OWNER/REPO/v2.0.0.6#anycubic-slicer-next` after creating that tag.
 
 ## Use in a NixOS flake
 

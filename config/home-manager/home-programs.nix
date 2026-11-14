@@ -41,7 +41,6 @@
       os-prober
       pciutils
       peazip
-      prusa-slicer
       qbittorrent
       ripgrep
       ruff

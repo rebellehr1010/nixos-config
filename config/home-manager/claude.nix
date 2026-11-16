@@ -34,6 +34,12 @@ in
     enable = true;
     enableMcpIntegration = true;
 
+    # Merge the declared settings into a writable ~/.claude/settings.json at
+    # activation instead of symlinking a read-only store file, so Claude Code
+    # can persist runtime choices (/model, /config, ...). Declared keys win on
+    # every switch; keys Claude adds itself are preserved.
+    mutableSettings = true;
+
     settings = {
       theme = "dark";
 
@@ -58,6 +64,42 @@ in
     };
   };
 
+  # Prompt keys: Enter / Shift+Enter insert a newline, Ctrl+Enter submits.
+  # Alt+Enter also submits as a fallback for terminals that cannot tell
+  # Ctrl+Enter apart from Enter (e.g. GNOME Console/VTE, which lacks the kitty
+  # keyboard protocol) - without it, a prompt could never be sent there.
+  # Claude Code only reads this file, so a read-only store symlink is fine.
+  home.file.".claude/keybindings.json".text = builtins.toJSON {
+    "$schema" = "https://www.schemastore.org/claude-code-keybindings.json";
+    "$docs" = "https://code.claude.com/docs/en/keybindings";
+    bindings = [
+      {
+        context = "Chat";
+        bindings = {
+          "enter" = "chat:newline";
+          "shift+enter" = "chat:newline";
+          "ctrl+enter" = "chat:submit";
+          "alt+enter" = "chat:submit";
+        };
+      }
+    ];
+  };
+
   # Terminal multiplexer for running coding agents side by side (https://herdr.dev).
+  # herdr negotiates the kitty keyboard protocol with the host terminal and
+  # re-encodes keys per pane, so Ctrl/Shift+Enter reach Claude intact as long
+  # as the outer terminal supports that protocol (Ghostty does; see below).
   programs.herdr.enable = true;
+
+  # Ghostty: host terminal with kitty keyboard protocol support, needed for
+  # Ctrl+Enter / Shift+Enter to be distinguishable from Enter.
+  programs.ghostty = {
+    enable = true;
+    enableZshIntegration = true;
+    settings = {
+      # Ghostty binds Ctrl+Enter to toggle_fullscreen on Linux by default;
+      # release it so it reaches herdr/Claude.
+      keybind = [ "ctrl+enter=unbind" ];
+    };
+  };
 }

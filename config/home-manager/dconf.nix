@@ -27,8 +27,8 @@
       };
       "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0" = {
         binding = "<Control><Alt>t";
-        command = "kgx";
-        name = "Console";
+        command = "ghostty";
+        name = "Terminal";
       };
       "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1" = {
         binding = "<Super>e";

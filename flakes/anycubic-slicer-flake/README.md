@@ -42,12 +42,43 @@ dialog stuck on loading placeholders before showing printers. This is a native
 dialog, separate from the embedded Login page. Updating to 2.0.0.6 with the same
 profile and `magnet-dispenser.3mf` project allowed slicing and loaded the Kobra S1,
 filament slots, print options, and enabled Start Print button. The user confirmed
-the dialog responds. This comparison establishes that the update resolves the
-observed stall; it does not identify the exact upstream defect. Settings and the
-project were backed up before the upgrade. No physical print was started by the
-diagnostic tests.
+the dialog responds. However, subsequent testing after rebuilding and rebooting
+found that Remote Print still intermittently stalls on the KOGAN display, while
+it reliably loads on the Acer display. The successful upgrade test therefore
+does not establish that 2.0.0.6 fixes the stall. Settings and the project were
+backed up before the upgrade. No physical print was started by the diagnostic
+tests.
 
 Completed print jobs, camera playback, and non-NixOS hosts still need manual testing.
+
+## Remote Print and multiple monitors
+
+Remote Print loading remains an open issue on the tested GNOME Wayland desktop.
+Both displays use 100% scaling. The application already runs through XWayland;
+setting `GDK_BACKEND=x11` does not switch it to a different rendering path.
+
+[OrcaSlicer issue #11849](https://github.com/OrcaSlicer/OrcaSlicer/issues/11849)
+describes related multi-monitor UI stalls. Its
+[wxWidgets fix](https://github.com/wxWidgets/wxWidgets/commit/3dde6bdeb0cec5af8b81a231b9deb851d975a2c2)
+disables GLX swap synchronisation to avoid blocking the UI when an OpenGL window
+is hidden. This is a possible explanation for the Anycubic symptoms, not a
+confirmed diagnosis.
+
+A separate launch with a copied profile tested Mesa's `vblank_mode=0` override
+on 2026-11-14. Mesa confirmed that it applied the override and the viewport and
+slicing worked, but the process subsequently crashed while opening Remote Print
+after moving between monitors. This does not establish what caused the crash or
+whether it shares a cause with the loading stall. The override is not enabled
+by this package or recommended as a confirmed workaround.
+
+For now, use the Acer display where Remote Print has been reliable. When the
+loading stall next occurs on the KOGAN, move the already-open dialog to the Acer
+and check whether it recovers without reopening it. Compare with closing the
+dialog, moving the main window, and reopening Remote Print. Keep the same
+project and printer online during the comparison; a completed dialog reporting
+"No available printers found" is a different outcome from stuck loading
+placeholders. The existing WebKit login workaround addresses a separate
+embedded-page rendering problem.
 
 ## Build and run locally
 

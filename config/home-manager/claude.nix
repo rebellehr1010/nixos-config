@@ -14,6 +14,12 @@ let
         CLAUDE_CONFIG_DIR=$HOME/.claude herdr integration install claude
         install -Dm755 $HOME/.claude/hooks/herdr-agent-state.sh $out
       '';
+
+  # Status line: directory, model, and 5-hour / 7-day subscription usage.
+  claudeStatusline = pkgs.writeShellScript "claude-statusline" ''
+    export PATH=${pkgs.lib.makeBinPath [ pkgs.jq pkgs.coreutils ]}:$PATH
+    ${builtins.readFile ./claude-statusline.sh}
+  '';
 in
 {
   # Shared MCP server definitions (usable by any home-manager module with MCP integration).
@@ -30,6 +36,11 @@ in
 
     settings = {
       theme = "dark";
+
+      statusLine = {
+        type = "command";
+        command = "${claudeStatusline}";
+      };
 
       # herdr agent-state integration (equivalent of `herdr integration install claude`).
       hooks.SessionStart = [

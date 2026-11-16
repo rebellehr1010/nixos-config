@@ -24,7 +24,9 @@ in
       brave
       calibre
       caprine
+      claude-code
       cmake
+      codex
       # davinci-resolve
       dconf-editor
       discord-ptb

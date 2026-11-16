@@ -14,6 +14,8 @@
     ./config/home-manager/dconf.nix
     ./config/home-manager/home-config.nix
     ./config/home-manager/home-programs.nix
+    ./config/home-manager/claude.nix
+    ./config/home-manager/secrets.nix
   ];
 
   home.stateVersion = "25.05";

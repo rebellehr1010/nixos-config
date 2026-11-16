@@ -24,7 +24,6 @@ in
       brave
       calibre
       caprine
-      claude-code
       cmake
       codex
       # davinci-resolve

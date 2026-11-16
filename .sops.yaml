@@ -1,0 +1,9 @@
+# Who can decrypt files under secrets/. Add one age key per user/host, then run
+# `sops updatekeys secrets/<file>` to re-encrypt existing files for new recipients.
+keys:
+  - &riley age1hcgxazmu06dqvymgafj34sckr52cm28fx0j45n06jkslafl9a9ksu5q76d
+creation_rules:
+  - path_regex: secrets/[^/]+\.(yaml|json|env|ini)$
+    key_groups:
+      - age:
+          - *riley

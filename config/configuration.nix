@@ -7,6 +7,13 @@
   # imports = [# Include the results of the hardware scan.];
   nix = {
     optimise.automatic = true;
+    # Drop old system generations (and their store paths) weekly; the boot
+    # menu is separately capped by systemd-boot.configurationLimit.
+    gc = {
+      automatic = true;
+      dates = "weekly";
+      options = "--delete-older-than 14d";
+    };
     settings = {
       # Deduplicate with the scheduled optimise job, outside the rebuild path.
       auto-optimise-store = false;

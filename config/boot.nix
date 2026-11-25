@@ -3,7 +3,11 @@
   boot = {
     kernelPackages = pkgs.linuxPackages_latest;
     loader = {
-      systemd-boot.enable = true;
+      systemd-boot = {
+        enable = true;
+        # Keep /boot (1 GiB ESP) from filling up with old kernels/initrds.
+        configurationLimit = 10;
+      };
       efi.canTouchEfiVariables = true;
     };
     supportedFilesystems = [ "nfs" ];

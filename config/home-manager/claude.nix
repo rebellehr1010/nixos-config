@@ -1,4 +1,9 @@
-{ config, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   # herdr's Claude integration normally writes a hook script and merges a
   # SessionStart hook into ~/.claude/settings.json. That file is a read-only
@@ -89,7 +94,22 @@ in
   # herdr negotiates the kitty keyboard protocol with the host terminal and
   # re-encodes keys per pane, so Ctrl/Shift+Enter reach Claude intact as long
   # as the outer terminal supports that protocol (Ghostty does; see below).
-  programs.herdr.enable = true;
+  programs.herdr = {
+    enable = true;
+    # herdr writes to its own config (e.g. onboarding state), so merge the
+    # declared values into a writable file rather than a store symlink.
+    mutableSettings = true;
+    settings = {
+      onboarding = false;
+      ui.status_indicators = "symbols";
+    };
+  };
+
+  # herdr's Codex integration (agent-state hook in ~/.codex). ~/.codex is not
+  # Nix-managed, so run herdr's own idempotent installer on each activation.
+  home.activation.herdrCodexIntegration = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    run ${lib.getExe config.programs.herdr.package} integration install codex >/dev/null
+  '';
 
   # Ghostty: host terminal with kitty keyboard protocol support, needed for
   # Ctrl+Enter / Shift+Enter to be distinguishable from Enter.

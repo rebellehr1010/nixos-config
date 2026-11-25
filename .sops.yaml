@@ -1,9 +1,11 @@
 # Who can decrypt files under secrets/. Add one age key per user/host, then run
 # `sops updatekeys secrets/<file>` to re-encrypt existing files for new recipients.
 keys:
-  - &riley age1hcgxazmu06dqvymgafj34sckr52cm28fx0j45n06jkslafl9a9ksu5q76d
+  - &riley age1hcgxazmu06dqvymgafj34sckr52cm28fx0j45n06jkslafl9a9ksu5q76d # nixos-desktop ~/.ssh/id_ed25519
+  - &riley-framework age1lq8n9evhamtzrgm5fnnr2cu2wm5vrp8hmhajhu4gk3gvfsyquqgqnnwtq8 # nixos-framework ~/.ssh/id_ed25519
 creation_rules:
   - path_regex: secrets/[^/]+\.(yaml|json|env|ini)$
     key_groups:
       - age:
           - *riley
+          - *riley-framework

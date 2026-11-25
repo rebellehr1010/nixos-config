@@ -13,6 +13,16 @@
       autoLogin.enable = false;
     };
     fwupd.enable = true; # Enable firmware updates.
+    # SSH server: key-only login (see users.nix for authorized keys), no root.
+    openssh = {
+      enable = true;
+      settings = {
+        PasswordAuthentication = false;
+        KbdInteractiveAuthentication = false;
+        PermitRootLogin = "no";
+        AllowUsers = [ "riley" ];
+      };
+    };
     openvpn = {
       servers = {
         # au-perth = {
